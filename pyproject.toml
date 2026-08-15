@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "face3d"
+version = "0.1.0"
+description = "Traceable three-view non-rigid reconstruction on a unified head template"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "fast-simplification>=0.1.9,<0.2",
+  "mediapipe==0.10.21",
+  "numpy>=1.26.4,<2",
+  "open3d>=0.19,<0.20",
+  "opencv-python-headless>=4.10,<5",
+  "pillow>=11,<12",
+  "pillow-heif>=0.21,<1",
+  "psutil>=6.1,<8",
+  "pydantic>=2.10,<3",
+  "pyyaml>=6,<7",
+  "scikit-image>=0.25,<0.26",
+  "scipy>=1.14,<2",
+  "trimesh>=4.6,<5",
+  "torch>=2.6,<3",
+  "typer>=0.15,<1",
+  "xatlas>=0.0.11,<0.1",
+]
+
+[project.optional-dependencies]
+legacy-sdf = []
+
+[project.scripts]
+face3d = "face3d.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/face3d"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

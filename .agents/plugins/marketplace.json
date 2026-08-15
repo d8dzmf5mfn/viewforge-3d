@@ -1,0 +1,20 @@
+{
+  "name": "face3d-github",
+  "interface": {
+    "displayName": "Face3d Github"
+  },
+  "plugins": [
+    {
+      "name": "face3d-modeling-toolkit",
+      "source": {
+        "source": "local",
+        "path": "./plugins/face3d-modeling-toolkit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Creative"
+    }
+  ]
+}

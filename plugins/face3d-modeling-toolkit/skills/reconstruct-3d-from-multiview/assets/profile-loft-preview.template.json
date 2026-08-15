@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "route": "profile-loft-preview",
+  "state": "preview",
+  "previewOnly": true,
+  "identityAcceptanceAllowed": false,
+  "targetClass": "replace-me",
+  "inputs": {
+    "front": {
+      "evidenceType": "observed",
+      "path": "replace-me",
+      "sha256": "replace-me"
+    },
+    "leftProfile": {
+      "evidenceType": "replace-observed-or-model-inferred",
+      "path": "replace-me",
+      "sha256": "replace-me",
+      "parentHashes": []
+    },
+    "rightProfile": {
+      "evidenceType": "replace-observed-or-model-inferred",
+      "path": "replace-me",
+      "sha256": "replace-me",
+      "parentHashes": []
+    }
+  },
+  "cameras": {},
+  "masks": {},
+  "builder": {
+    "method": "scanline-profile-loft",
+    "verticalSamples": 256,
+    "radialSamples": 256,
+    "parameters": {},
+    "codeSha256": "replace-me"
+  },
+  "hiddenSurfacePolicy": "explicit-inference",
+  "appearance": {
+    "geometryReviewBeforeSkin": true,
+    "solidReviewMaterialOnly": true
+  },
+  "qa": {
+    "requiredReviewYawDegrees": [0, 45, 90],
+    "topologyHash": "replace-me",
+    "userSignoff": false
+  }
+}

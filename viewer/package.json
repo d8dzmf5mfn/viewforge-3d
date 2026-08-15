@@ -1,0 +1,35 @@
+{
+  "name": "face3d-viewer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "annotate": "node bridge/start-annotation-platform.mjs",
+    "annotation:bridge": "node bridge/annotation-bridge.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run && node bridge/annotation-bridge-args.test.mjs && node bridge/job-progress.test.mjs",
+    "test:e2e": "mkdir -p ../.tmp ../.local/matplotlib && UV_CACHE_DIR=../.uv-cache MPLCONFIGDIR=../.local/matplotlib uv run --project .. python ../scripts/create_demo_package.py ../.tmp/face-001.face3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v2_contract_fixture.py ../.tmp/face-v2-contract.face3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v3_contract_fixture.py ../.tmp/face-v3-contract.face3d && playwright test",
+    "typecheck": "tsc -b --pretty false",
+    "test:annotation-e2e": "playwright test -c playwright.annotation.config.ts"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "lucide-react": "^1.30.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@types/three": "^0.185.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "jsdom": "^30.0.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

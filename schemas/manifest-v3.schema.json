@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.3d-face-lab/schemas/manifest-3.0.0.json",
+  "title": "3D Face Lab TemplateHeadV0 result manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "subjectProfile",
+    "mode",
+    "templateId",
+    "provenance",
+    "cameras",
+    "fit",
+    "mesh",
+    "skin",
+    "projection",
+    "anatomy",
+    "sdf",
+    "confidence",
+    "diagnostics",
+    "runtime"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "3.0.0" },
+    "subjectProfile": { "const": "face-v3" },
+    "mode": { "const": "template-head-v0" },
+    "templateId": { "const": "TemplateHeadV0" },
+    "provenance": {
+      "type": "object",
+      "required": ["inputs", "models", "configSha256", "codeSha256", "visualBaseline"]
+    },
+    "cameras": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "object" }
+    },
+    "fit": {
+      "type": "object",
+      "required": ["fittedGeometrySha256", "perView", "orientation", "passed"]
+    },
+    "mesh": {
+      "type": "object",
+      "required": [
+        "model",
+        "geometryHash",
+        "nodes",
+        "componentCount",
+        "boundaryEdgeCount",
+        "nonManifoldEdgeCount",
+        "selfIntersectionPairCount",
+        "topCurvatureSpikeRatio",
+        "surfaceGeneratedBySdf",
+        "passed"
+      ],
+      "properties": {
+        "model": { "const": "models/head.glb" },
+        "geometryHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "surfaceGeneratedBySdf": { "const": false }
+      }
+    },
+    "skin": {
+      "type": "object",
+      "required": [
+        "model",
+        "geometryHash",
+        "neutralGeometryHash",
+        "skinGeometryHash",
+        "maximumVertexDifference",
+        "modelSha256",
+        "passed"
+      ],
+      "properties": {
+        "model": { "const": "models/head.glb" },
+        "maximumVertexDifference": { "const": 0.0 }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "required": [
+        "recordCount",
+        "binary",
+        "binarySha256",
+        "schema",
+        "schemaSha256",
+        "sourceViewOrder"
+      ],
+      "properties": {
+        "binary": { "const": "projection/skin-projection.npz" },
+        "schema": { "const": "projection/schema.json" }
+      }
+    },
+    "anatomy": { "type": "object" },
+    "sdf": {
+      "type": "object",
+      "required": ["role", "surfaceGenerated", "gridAllocated", "passed"],
+      "properties": {
+        "role": { "const": "qa-only" },
+        "surfaceGenerated": { "const": false },
+        "gridAllocated": { "const": false }
+      }
+    },
+    "confidence": { "type": "object" },
+    "diagnostics": { "type": "object" },
+    "runtime": { "type": "object" }
+  }
+}

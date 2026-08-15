@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.3d-face-lab/schemas/manifest-2.0.0.json",
+  "title": "3D Face Lab Face v2 result manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "subjectProfile",
+    "mode",
+    "provenance",
+    "cameras",
+    "pixel",
+    "voxel",
+    "mesh",
+    "skin",
+    "fit",
+    "anatomy",
+    "confidence",
+    "runtime"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "2.0.0" },
+    "subjectProfile": { "const": "face-v2" },
+    "mode": { "const": "pixel-flame-hybrid" },
+    "provenance": { "type": "object" },
+    "cameras": { "type": "array", "minItems": 3, "maxItems": 3 },
+    "pixel": {
+      "type": "object",
+      "required": ["instanceCount", "binary", "binarySha256", "schema", "schemaSha256"]
+    },
+    "voxel": { "type": "object" },
+    "mesh": {
+      "type": "object",
+      "required": ["model", "geometryHash", "nodes"]
+    },
+    "skin": {
+      "type": "object",
+      "required": [
+        "model",
+        "geometryHash",
+        "neutralGeometryHash",
+        "skinGeometryHash",
+        "maximumVertexDifference",
+        "confidenceMap",
+        "sourceMap"
+      ]
+    },
+    "fit": { "type": "object" },
+    "anatomy": { "type": "object" },
+    "confidence": { "type": "object" },
+    "runtime": { "type": "object" }
+  }
+}

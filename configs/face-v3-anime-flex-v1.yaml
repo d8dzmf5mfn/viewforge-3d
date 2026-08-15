@@ -1,0 +1,115 @@
+schema_version: 3
+profile: face-v3
+mode: template-head-v0
+deterministic: true
+seed: 20260810
+
+assets:
+  template_head: assets/template-head-v0/anatomy/template-head-v0.unified.npz
+  template_landmarks: assets/template-head-v0/anatomy/landmark-surface-map.npz
+  template_manifest: assets/template-head-v0/anatomy/anatomy.json
+  face_landmarker: .local/models/mediapipe/face_landmarker.task
+  canonical_face_model: .local/models/mediapipe/canonical_face_model.obj
+
+input:
+  minimum_short_side: 1024
+  front_yaw_limit_deg: 10.0
+  side_target_yaw_deg: 35.0
+  side_yaw_tolerance_deg: 10.0
+  pitch_limit_deg: 30.0
+  roll_limit_deg: 15.0
+  minimum_laplacian_variance: 80.0
+  maximum_mouth_gap_ratio: 0.045
+  maximum_jaw_open_score: 1.0
+  minimum_face_detection_confidence: 0.10
+  minimum_face_presence_confidence: 0.10
+  minimum_face_tracking_confidence: 0.10
+  mask_method: white-background
+  minimum_mask_face_coverage: 0.72
+  require_mask_confirmation: true
+
+pixel:
+  grid_size: 384
+  coarse_depth_grid: 64
+  complex_region_radius_pixels: 12.0
+  maximum_cells: 1
+  depth_scale_face_width: 0.38
+  cell_fill_ratio: 0.92
+  base_thickness_pixels: 0.8
+
+fit:
+  shape_coefficients: 128
+  shared_focal_length: true
+  adam_iterations: 900
+  lbfgs_iterations: 160
+  learning_rate: 0.008
+  landmark_weight: 1.8
+  contour_weight: 1.2
+  shape_prior_weight: 0.002
+  symmetry_weight: 0.035
+  dense_landmark_weight: 1.3
+  relative_depth_weight: 0.010
+  local_offset_weight: 0.04
+  laplacian_weight: 0.09
+  arap_weight: 0.12
+  maximum_normal_offset_face_width: 0.025
+  low_frequency_basis_size: 128
+  maximum_vertex_displacement_face_width: 0.24
+  inversion_barrier_weight: 0.35
+  ear_constraint_weight: 0.80
+  eyelid_constraint_weight: 0.55
+
+sdf:
+  resolution: 256
+  padding_fraction: 0.05
+  surface_band_voxels: 1.5
+  maximum_instances: 1
+  query_chunk_points: 786432
+
+mesh:
+  target_triangles: 21400
+  minimum_triangles: 21400
+  maximum_triangles: 21400
+  taubin_iterations: 0
+  taubin_lambda: 0.0
+  taubin_nu: 0.0
+  feature_protection_radius_voxels: 3.0
+
+skin:
+  atlas_resolution: 4096
+  detail_resolution: 2048
+  uv_albedo_source: assets/materials/skin-v1/head-uv-base-v2.png
+  micro_albedo_source: assets/materials/skin-v1/micro-albedo-source.png
+  minimum_observed_vertex_fraction: 0.35
+  jpeg_quality: 94
+  uv_method: xatlas
+  local_warp_fraction_max: 0.005
+  eye_atlas_resolution: 1024
+
+anatomy:
+  subdivision_levels: 0
+  eye_radius_min_scale: 0.90
+  eye_radius_max_scale: 1.10
+  eye_radius_symmetry_max: 0.03
+  eyelid_clearance_ratio_max: 0.03
+  ear_silhouette_iou_min: 0.85
+
+acceptance:
+  front_landmark_nme_max: 0.015
+  side_landmark_nme_max: 0.020
+  front_silhouette_iou_min: 0.95
+  side_silhouette_iou_min: 0.92
+  silhouette_iou_drop_max: 0.005
+  feature_drift_voxels_max: 1.0
+  normal_variance_reduction_min: 0.30
+  hausdorff_voxels_max: 1.5
+  package_size_mb_max: 25.0
+  runtime_minutes_max: 60.0
+  peak_memory_gb_max: 12.0
+  front_landmark_nme_v2_max: 0.015
+  side_landmark_nme_v2_max: 0.020
+  front_silhouette_iou_v2_min: 0.95
+  side_silhouette_iou_v2_min: 0.92
+  texture_face_error_px_max: 2.0
+  texture_ear_error_px_max: 4.0
+  maximum_surface_distance_voxels: 0.75

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Face3D Toolkit Router"
+  short_description: "Route Face3D reconstruction and refinement tasks"
+  default_prompt: "Use $face3d-toolkit-router to choose and sequence the safest Face3D skills for this task."

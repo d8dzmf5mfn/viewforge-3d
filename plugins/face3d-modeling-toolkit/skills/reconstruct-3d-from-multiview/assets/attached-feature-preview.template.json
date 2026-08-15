@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "route": "profile-loft-preview",
+  "state": "preview",
+  "previewOnly": true,
+  "identityAcceptanceAllowed": false,
+  "hiddenSurfacePolicy": "explicit-inference",
+  "subjectClass": null,
+  "realPerson": null,
+  "feature": {
+    "name": null,
+    "namingConvention": "front-image-space",
+    "frontImageSide": null,
+    "anatomicalSideIfFrontFacing": null,
+    "sourceRole": null
+  },
+  "coordinateMapping": {
+    "frontAxis": null,
+    "upAxis": null,
+    "sagittalPlane": null,
+    "imageLeftWorldSide": null,
+    "imageRightWorldSide": null,
+    "localToWorldTransform": null
+  },
+  "sourceArtifacts": [],
+  "standaloneFeature": {
+    "approvedArtifactSha256": null,
+    "attachmentAngleDegrees": null,
+    "detailSurfaceDirection": null,
+    "posteriorEvidenceClass": null,
+    "userReviewed": false
+  },
+  "connection": {
+    "chain": "base -> short organic bridge -> feature plate",
+    "bridgeIsSoleConnection": true,
+    "featureDirectlyIntersectsBase": false
+  },
+  "symmetry": {
+    "plane": null,
+    "canonicalMaximumResidual": null,
+    "placementClearance": null,
+    "tangentClearance": null
+  },
+  "collisions": {
+    "featureInsideBaseFaceCentroids": null,
+    "bridgeInsideBaseFaceCentroids": null,
+    "bridgeInsideFeatureFaceCentroids": null,
+    "featureInsideBridgeFaceCentroids": null
+  },
+  "surfaceIntegration": {
+    "method": "Blender exact triangle-mesh Boolean union",
+    "operandOrder": [
+      "bridge",
+      "feature"
+    ],
+    "voxelOrSdfUsed": false,
+    "marchingCubesUsed": false,
+    "failedAttemptsPreserved": []
+  },
+  "gates": {
+    "inMemory": null,
+    "persistedGlb": null,
+    "oneGeometry": null,
+    "oneGeometryNode": null,
+    "materialPreserved": null,
+    "automaticPassed": false,
+    "visualReviewPassed": false,
+    "userSignoff": false
+  },
+  "networkActivity": {
+    "accessed": false,
+    "downloadsPerformed": false
+  }
+}

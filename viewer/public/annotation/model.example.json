@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "displayName": "Configured source",
+  "sourceVersion": "source-v1",
+  "route": "profile-loft-preview",
+  "outputState": "geometry-preview",
+  "subjectProfile": "generic-object",
+  "realPerson": false,
+  "modelUrl": "/annotation/source.glb",
+  "modelPath": "/absolute/path/to/source.glb",
+  "modelSha256": "replace-with-64-character-sha256",
+  "pickProxyUrl": "/annotation/source-pick-proxy.glb",
+  "pickProxyReportUrl": "/annotation/source-pick-proxy.json",
+  "coordinateSystem": {
+    "frontAxis": "-Z",
+    "upAxis": "+Y",
+    "bilateralAxis": "X"
+  },
+  "invariants": [
+    "never overwrite the configured source",
+    "manual annotations do not authorize unobserved depth",
+    "the picking proxy is QA-only and never a delivery surface"
+  ]
+}

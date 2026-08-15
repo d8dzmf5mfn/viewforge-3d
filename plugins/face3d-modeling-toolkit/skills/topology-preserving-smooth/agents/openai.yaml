@@ -1,0 +1,4 @@
+interface:
+  display_name: "Topology-Preserving Smooth"
+  short_description: "Smooth mesh regions without topology drift"
+  default_prompt: "Use $topology-preserving-smooth to smooth this mesh region while preserving topology."

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.3d-face-lab/schemas/manifest-1.0.0.json",
+  "title": "3D Face Lab result manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "subjectProfile",
+    "mode",
+    "provenance",
+    "cameras",
+    "pixel",
+    "voxel",
+    "mesh",
+    "fit",
+    "confidence",
+    "runtime"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "subjectProfile": { "const": "face-v1" },
+    "mode": { "const": "pixel-direct" },
+    "provenance": { "type": "object" },
+    "cameras": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "object" }
+    },
+    "pixel": {
+      "type": "object",
+      "required": [
+        "mapping",
+        "gridSize",
+        "instanceCount",
+        "binary",
+        "binarySha256",
+        "schema",
+        "schemaSha256"
+      ]
+    },
+    "voxel": { "type": "object" },
+    "mesh": { "type": "object" },
+    "fit": { "type": "object" },
+    "confidence": { "type": "object" },
+    "runtime": { "type": "object" }
+  }
+}

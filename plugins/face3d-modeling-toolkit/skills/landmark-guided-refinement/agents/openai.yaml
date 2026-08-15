@@ -1,0 +1,4 @@
+interface:
+  display_name: "Landmark-Guided Refinement"
+  short_description: "Fit contours and refine classified facial landmarks"
+  default_prompt: "Use $landmark-guided-refinement to fit coarse contours, then refine classified facial features with fixed-view QA."
