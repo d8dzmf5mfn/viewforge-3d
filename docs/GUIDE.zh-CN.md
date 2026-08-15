@@ -39,6 +39,10 @@ codex plugin add viewforge-3d-toolkit@viewforge-3d
 ```text
 使用 $viewforge-3d-toolkit:reconstruct-3d-from-multiview 根据这些二维图片构建无贴皮物体预览。
 
+使用 $viewforge-3d-toolkit:build-biological-skeleton 为这个人物或动物建立纯骨架 Armature，不添加权重。
+
+使用 $viewforge-3d-toolkit:animate-biological-skeleton 根据带完整骨架的关键姿势图驱动已验收 Armature，并在无 skin 权重条件下刚性绑定分段肢体。
+
 使用 $viewforge-3d-toolkit:landmark-guided-refinement 拟合已验收的人脸关键点，不改变不可见深度。
 
 使用 $viewforge-3d-toolkit:annotation-region-lowering 将标注区域向内压低，不进行平滑。
@@ -68,6 +72,28 @@ codex plugin add viewforge-3d-toolkit@viewforge-3d
 
 只有几何已验收后才能使用 `same-geometry-skin`。外观阶段前后的几何哈希和 UV 哈希必须完全
 一致。
+
+### 不添加权重的生物骨架
+
+使用 `build-biological-skeleton`。先生成正面和侧面骨骼标注图，但只把它们视为视觉假设。生产
+关节坐标必须来自有语义名称的分段组件，或经过审阅的三维关键点。输出不得包含权重、Armature
+modifier、网格父级关系或动画。人物和人形角色使用 `humanoid-v1`；四足动物使用
+`quadruped-v1` 并提供显式三维关键点。
+
+### 不使用 skin 的生物动画
+
+骨架位置验收后使用 `animate-biological-skeleton`。基于真实模型的固定正面渲染生成每个关键姿势
+和结束姿势，并要求每张图都显示完整骨架。把经过审阅的关节点像素转换为相对根关节的 X/Z
+方向，保留 Blender 静止骨长，只记录骨骼四元数旋转，并使用自动限幅 Bezier 插值补齐中间帧。
+
+对于全身移动或道具交互，PoseBone Action 仍然只能记录旋转。角色的整体位移和转向放在父级
+Empty 上，每个道具轨迹放在独立 Empty 上。必须在重新打开的 Blend 文件中检查接触距离、道具
+位移、根节点转向连续性和最终支撑对位。
+
+如果模型由独立刚性肢体组件组成，为每个组件建立完整骨骼映射，再用 Bone Parent 让模型在没有
+顶点组和 Armature modifier 的条件下跟随 Action。连续网格无法用这种方式弯曲；在禁止 skin
+权重时，只返回纯骨架动画。分别重新打开审计 Action 和绑定，最后把模型层与完整骨架层合成为
+固定正面接触表，等待用户验收。
 
 ### 无贴皮物体
 
@@ -121,7 +147,7 @@ source .venv/bin/activate
 python scripts/package_viewforge_plugin.py \
   --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/viewforge-3d-toolkit-0.4.0.zip
+  --output dist/viewforge-3d-toolkit-0.5.0.zip
 ```
 
 ZIP 包含 Apache-2.0 许可证、插件清单、全部技能，以及相互独立的中英文 README、详细指南和

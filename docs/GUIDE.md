@@ -39,6 +39,10 @@ Call a specialist directly when the stage is already known:
 ```text
 Use $viewforge-3d-toolkit:reconstruct-3d-from-multiview to build an unskinned object preview from these images.
 
+Use $viewforge-3d-toolkit:build-biological-skeleton to build a bone-only Armature for this person or animal without adding weights.
+
+Use $viewforge-3d-toolkit:animate-biological-skeleton to animate this accepted Armature from skeleton-overlaid key poses and rigid-bind segmented body parts without skin weights.
+
 Use $viewforge-3d-toolkit:landmark-guided-refinement to fit these accepted facial landmarks without changing hidden depth.
 
 Use $viewforge-3d-toolkit:annotation-region-lowering to press this annotated region inward without smoothing.
@@ -69,6 +73,32 @@ requested operation. Do not reclassify the job as a new reconstruction.
 
 Use `same-geometry-skin` only after geometry acceptance. Require identical geometry and UV hashes
 before and after the appearance stage.
+
+### Biological skeleton without weights
+
+Use `build-biological-skeleton`. Generate front and side image annotations first, but treat them as
+visual hypotheses only. Derive production joints from named segmented components or reviewed 3D
+landmarks. The output must contain no weights, Armature modifiers, mesh parenting, or animation.
+Use `humanoid-v1` for people and humanoids; use `quadruped-v1` with explicit 3D landmarks for
+four-legged animals.
+
+### Biological animation without skin
+
+Use `animate-biological-skeleton` after the bone-only Armature is accepted. Generate each key pose
+and ending pose from the actual fixed-front render with the complete skeleton visible. Convert
+reviewed marker pixels to root-relative X/Z directions, preserve Blender rest lengths, and key only
+bone quaternions with auto-clamped Bezier interpolation.
+
+For full-body locomotion or prop interaction, keep the pose-bone Action rotation-only. Put global
+character translation and turning on a parent Empty, and each prop trajectory on a separate Empty.
+Validate contact distances, prop displacement, root-turn continuity, and final support alignment in
+an independently reopened Blend file.
+
+If the model consists of separate rigid anatomical components, map every component to a bone and
+use Bone Parent so the model follows the Action without vertex groups or Armature modifiers. A
+continuous mesh cannot bend this way; while skin weights remain forbidden, stop with a bone-only
+animation. Reopen-audit both the Action and binding, then render model and skeleton layers into one
+fixed-front contact sheet for user signoff.
 
 ### Unskinned object
 
@@ -123,7 +153,7 @@ source .venv/bin/activate
 python scripts/package_viewforge_plugin.py \
   --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/viewforge-3d-toolkit-0.4.0.zip
+  --output dist/viewforge-3d-toolkit-0.5.0.zip
 ```
 
 The ZIP contains the Apache-2.0 license, plugin manifest, all skills, and separate English and

@@ -5,7 +5,8 @@
 ViewForge 3D is a Codex plugin and Python workspace for traceable, quality-gated construction of
 3D models from multi-view 2D evidence. It supports people, stylized characters, products, and
 general objects through continuous-template fitting, bounded geometry refinement, attached-feature
-workflows, fixed-view QA, and appearance changes that preserve accepted geometry.
+workflows, bone-only biological armatures and animation, no-skin rigid binding for segmented
+models, fixed-view QA, and appearance changes that preserve accepted geometry.
 
 The toolkit fails closed: a missing production template, insufficient evidence, broken topology,
 or rejected visual candidate does not silently fall back to a plausible primitive or voxel shell.
@@ -34,12 +35,29 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 $viewforge-3d-toolkit:viewforge-3d-router
 ```
 
+For a human, humanoid, or animal model that needs only an auditable skeleton and no weights:
+
+```text
+$viewforge-3d-toolkit:build-biological-skeleton
+```
+
+To animate the accepted Armature from skeleton-overlaid key poses and optionally move segmented
+body parts without skin weights:
+
+```text
+$viewforge-3d-toolkit:animate-biological-skeleton
+```
+
 ## Boundaries
 
 - No third-party finished 3D model is imported when the requested route is reconstruction from 2D.
 - SDF, voxels, point clouds, and Marching Cubes remain QA-only unless a separate preview route is
   explicitly declared.
 - Automated geometry gates and user visual acceptance are separate states.
+- Static bone-only skeleton runs do not add weights, Armature modifiers, mesh parenting, or
+  animation.
+- Bone-only animation keys rotations only. No-skin model motion uses rigid Bone Parent only for
+  segmented components; continuous meshes require skin weights to bend and therefore fail closed.
 - Private input images and restricted engineering drawings are not included in the plugin package.
 
 The distributable plugin package is generated locally under `dist/`; generated models, evidence,

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Animate Biological Skeleton"
+  short_description: "Animate bones and rigid segmented biological models"
+  default_prompt: "Use $viewforge-3d-toolkit:animate-biological-skeleton to create and audit a bone-only biological animation without skin weights."

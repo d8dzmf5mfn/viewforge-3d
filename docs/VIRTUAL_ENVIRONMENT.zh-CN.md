@@ -4,9 +4,15 @@
 
 几何工具要求 Python 3.11。环境应放在仓库内的 `.venv/`；该目录被 Git 忽略，也不得进入插件包。
 
+完整仓库环境包含 ViewForge CLI、NumPy、SciPy、OpenCV、Pillow、Trimesh 和 Open3D。
+ViewForge CLI 由当前仓库安装，OpenCV 的 Python 包名是 `opencv-python-headless`，Pillow 的
+导入名是 `PIL`。下列安装命令会一次性安装这些组件，不需要逐个安装。
+
 ## 克隆仓库：使用 uv
 
-按照 `uv` 官方说明安装后，在仓库根目录运行：
+按照 `uv` 官方说明安装后，在仓库根目录运行。以下是首次创建环境的命令；
+`uv sync --frozen` 会安装当前 ViewForge 3D 项目、生成 `viewforge3d` 命令，并严格按照
+`uv.lock` 安装全部锁定依赖：
 
 ```bash
 uv python install 3.11
@@ -25,8 +31,12 @@ Windows PowerShell 激活命令：
 
 ```bash
 python --version
-python -c "import cv2, numpy, open3d, scipy, trimesh; print('environment ready')"
+viewforge3d --version
+python -c "import cv2, numpy, open3d, PIL, scipy, trimesh; print('ViewForge environment ready')"
 ```
+
+只有三个命令全部成功，才表示完整环境可用。环境确认后，后续建模任务应直接使用现有 `.venv`
+和插件脚本，不再运行 `uv sync`、`uv pip install`、`pip install` 或其他包安装命令。
 
 自动化脚本应显式使用项目解释器：
 
@@ -37,8 +47,10 @@ python -c "import cv2, numpy, open3d, scipy, trimesh; print('environment ready')
 
 ## Release ZIP：使用 uv
 
-Release ZIP 包含插件及辅助脚本的最小依赖，但不包含完整 ViewForge 3D Python 工作区。解压后
-进入顶层目录并运行：
+Release ZIP 包含插件及辅助脚本的最小依赖，但不包含 ViewForge CLI、完整 Python 工作区或上述
+完整几何依赖集合。需要完整环境时，必须使用克隆仓库的安装方法；不要把本节当作完整环境安装。
+
+如果只需要运行 ZIP 内附带的通用插件辅助脚本，解压后进入顶层目录并运行：
 
 ```bash
 uv python install 3.11
@@ -61,6 +73,9 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 python -m pip install "pytest>=8.3,<9" "pytest-cov>=6,<7" "ruff>=0.9,<1"
 ```
+
+其中 `python -m pip install -e .` 会安装 ViewForge CLI 和全部运行时依赖。安装完成后，运行前文
+列出的 `viewforge3d --version` 和六个 Python 库导入检查；不要再逐个重复安装这些库。
 
 对于解压后的 Release ZIP，安装最小依赖而不是仓库包：
 

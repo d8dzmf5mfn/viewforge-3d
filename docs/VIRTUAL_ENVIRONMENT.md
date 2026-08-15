@@ -5,9 +5,17 @@
 The geometry tools require Python 3.11. Keep the environment inside the repository as `.venv/`;
 it is ignored by Git and must not be included in plugin packages.
 
+The complete repository environment contains the ViewForge CLI, NumPy, SciPy, OpenCV, Pillow,
+Trimesh, and Open3D. The current repository supplies the ViewForge CLI, the Python package name for
+OpenCV is `opencv-python-headless`, and Pillow is imported as `PIL`. The setup commands below
+install these components together; do not install them one by one.
+
 ## Cloned repository: uv
 
-Install `uv` using its official instructions, then run from the repository root:
+Install `uv` using its official instructions, then run from the repository root. These commands
+are for first-time environment creation: `uv sync --frozen` installs the current ViewForge 3D
+project, creates the `viewforge3d` command, and installs every dependency exactly as locked in
+`uv.lock`:
 
 ```bash
 uv python install 3.11
@@ -26,8 +34,13 @@ Verify the interpreter and core geometry dependencies:
 
 ```bash
 python --version
-python -c "import cv2, numpy, open3d, scipy, trimesh; print('environment ready')"
+viewforge3d --version
+python -c "import cv2, numpy, open3d, PIL, scipy, trimesh; print('ViewForge environment ready')"
 ```
+
+The complete environment is ready only when all three commands succeed. After that verification,
+modeling tasks must reuse the existing `.venv` and plugin scripts without running `uv sync`,
+`uv pip install`, `pip install`, or any other package-install command.
 
 Use the project interpreter explicitly in automation:
 
@@ -38,8 +51,13 @@ Use the project interpreter explicitly in automation:
 
 ## Release ZIP: uv
 
-The Release ZIP contains the plugin and its minimum helper-script dependencies, but not the full
-ViewForge 3D Python workspace. After extracting the ZIP, enter its top-level directory and run:
+The Release ZIP contains the plugin and its minimum helper-script dependencies. It does not contain
+the ViewForge CLI, the complete Python workspace, or the full geometry dependency set listed
+above. Use the cloned-repository setup when the complete environment is required; do not treat this
+section as a full environment installation.
+
+If only the generic helper scripts bundled in the ZIP are needed, extract it, enter its top-level
+directory, and run:
 
 ```bash
 uv python install 3.11
@@ -62,6 +80,10 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 python -m pip install "pytest>=8.3,<9" "pytest-cov>=6,<7" "ruff>=0.9,<1"
 ```
+
+The `python -m pip install -e .` command installs the ViewForge CLI and all runtime dependencies.
+After it completes, run the `viewforge3d --version` and six-library import checks shown above; do
+not reinstall those libraries individually.
 
 For an extracted Release ZIP, install its minimum dependencies instead of the repository package:
 
