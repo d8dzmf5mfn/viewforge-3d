@@ -1,0 +1,4 @@
+interface:
+  display_name: "ViewForge 3D Router"
+  short_description: "Route general 3D construction and refinement workflows"
+  default_prompt: "Use $viewforge-3d-router to choose and sequence the safest ViewForge 3D skills for this task."

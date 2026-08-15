@@ -1,14 +1,14 @@
 {
-  "name": "face3d-github",
+  "name": "viewforge-3d",
   "interface": {
-    "displayName": "Face3d Github"
+    "displayName": "ViewForge 3D"
   },
   "plugins": [
     {
-      "name": "face3d-modeling-toolkit",
+      "name": "viewforge-3d-toolkit",
       "source": {
         "source": "local",
-        "path": "./plugins/face3d-modeling-toolkit"
+        "path": "./plugins/viewforge-3d-toolkit"
       },
       "policy": {
         "installation": "AVAILABLE",

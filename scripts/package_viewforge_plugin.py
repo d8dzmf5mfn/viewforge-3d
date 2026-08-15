@@ -13,6 +13,7 @@ EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 FIXED_TIMESTAMP = (2020, 1, 1, 0, 0, 0)
 FORBIDDEN_PACKAGE_SUFFIXES = {
     ".face3d",
+    ".viewforge3d",
     ".fbx",
     ".glb",
     ".gltf",
@@ -43,7 +44,7 @@ FORBIDDEN_TEXT_PATTERNS = {
 
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a deterministic Face3D plugin ZIP.")
+    parser = argparse.ArgumentParser(description="Build a deterministic ViewForge 3D plugin ZIP.")
     parser.add_argument("--plugin", type=Path, required=True)
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

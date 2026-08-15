@@ -457,7 +457,7 @@ export const DualViewport = forwardRef<ViewportHandle, Props>(function DualViewp
   return (
     <div className="viewport-host" ref={hostRef}>
       {mode === 'comparison' && <button className="viewport-split" aria-label="调整对照分隔线" onPointerDown={startSplitDrag} onPointerMove={moveSplit}><span aria-hidden="true">‹ ›</span></button>}
-      {!voxelGlb && !smoothGlb && !headGlb && <div className="viewport-empty"><strong>加载 `.face3d` 结果包</strong><span>模型、照片和报告只在当前浏览器标签页解析</span></div>}
+      {!voxelGlb && !smoothGlb && !headGlb && <div className="viewport-empty"><strong>加载 `.viewforge3d` 结果包</strong><span>模型、照片和报告只在当前浏览器标签页解析</span></div>}
     </div>
   )
 })

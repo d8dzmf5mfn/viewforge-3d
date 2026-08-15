@@ -78,7 +78,7 @@ comparison renderer when near-coplanar glass, screen, or body layers overlap.
 Return `geometry-preview` or `automated-gates-passed` until the user reviews the fixed views. Never
 write `user-accepted` automatically.
 
-## Face3D repository example
+## ViewForge 3D repository example
 
 The repository's iPhone 17 route uses a project-authored `TemplatePhoneV0`, official 2D and metric
 evidence, an immutable unskinned GLB run, fixed-view QA, per-component topology checks, GLB

@@ -49,7 +49,7 @@ export function validateAnnotationPackage(value: AnnotationPackage): string[] {
 }
 
 export function annotationFilename(): string {
-  return `face3d-annotation-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+  return `viewforge3d-annotation-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
 }
 
 export function downloadAnnotationPackage(value: AnnotationPackage): void {

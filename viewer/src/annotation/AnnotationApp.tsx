@@ -68,7 +68,7 @@ const defaultGlobalNotes = '保持动漫美术素材的脸部弧度，不要磨�
 const storageRevision = 'v2-polish-progress'
 
 function storageKey(modelSha256: string): string {
-  return `face3d-annotations:${storageRevision}:${modelSha256}`
+  return `viewforge3d-annotations:${storageRevision}:${modelSha256}`
 }
 
 function reloadUrl(url: string, revision: number): string {
@@ -279,7 +279,7 @@ export function AnnotationApp() {
     <main className="annotation-app">
       <header className="annotation-header">
         <div className="brand-block">
-          <strong>3D Face Lab</strong>
+          <strong>ViewForge 3D</strong>
           <span className="brand-divider" />
           <span>区域标注与修改</span>
         </div>

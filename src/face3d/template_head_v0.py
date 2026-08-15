@@ -925,7 +925,7 @@ def prepare_template_head_v0(
             source_artifacts["sourceRender"] = "source/skin.glb"
             source_hashes["renderGlb"] = hashlib.sha256(render_glb).hexdigest()
         source_descriptor = {
-            "kind": "face3d-package",
+            "kind": "viewforge3d-package",
             "packageSchemaVersion": source_manifest.get("schemaVersion"),
             "hashes": source_hashes,
         }

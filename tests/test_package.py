@@ -43,8 +43,8 @@ def test_package_is_deterministic(tmp_path: Path) -> None:
             f"qa/fixed-view-{role.value}.png",
         ):
             Image.new("RGB", (8, 8), (120, 130, 140)).save(run / relative)
-    first = tmp_path / "first.face3d"
-    second = tmp_path / "second.face3d"
+    first = tmp_path / "first.viewforge3d"
+    second = tmp_path / "second.viewforge3d"
     config = load_config(Path("configs/face-v1.yaml"))
     package_run(run, first, config)
     package_run(run, second, config)
@@ -95,6 +95,6 @@ def test_package_v2_uses_single_head_geometry(tmp_path: Path) -> None:
             f"qa/registration-{role.value}.png",
         ):
             Image.new("RGB", (8, 8), (120, 130, 140)).save(run / relative)
-    output = tmp_path / "v2.face3d"
+    output = tmp_path / "v2.viewforge3d"
     package_run(run, output, load_config(Path("configs/face-v2.yaml")))
     assert output.is_file()

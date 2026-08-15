@@ -39,7 +39,7 @@ Use the project interpreter explicitly in automation:
 ## Release ZIP: uv
 
 The Release ZIP contains the plugin and its minimum helper-script dependencies, but not the full
-`face3d` Python workspace. After extracting the ZIP, enter its top-level directory and run:
+ViewForge 3D Python workspace. After extracting the ZIP, enter its top-level directory and run:
 
 ```bash
 uv python install 3.11

@@ -25,20 +25,20 @@ import {
 const bridgeDirectory = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(bridgeDirectory, '../..')
 const host = '127.0.0.1'
-const port = Number(process.env.FACE3D_ANNOTATION_BRIDGE_PORT ?? 4174)
-const dryRun = process.env.FACE3D_ANNOTATION_DRY_RUN === '1'
-const executionMode = process.env.FACE3D_ANNOTATION_EXECUTION_MODE === 'auto' ? 'auto' : 'manual'
+const port = Number(process.env.VIEWFORGE3D_ANNOTATION_BRIDGE_PORT ?? 4174)
+const dryRun = process.env.VIEWFORGE3D_ANNOTATION_DRY_RUN === '1'
+const executionMode = process.env.VIEWFORGE3D_ANNOTATION_EXECUTION_MODE === 'auto' ? 'auto' : 'manual'
 const jobRoot = resolve(
-  process.env.FACE3D_ANNOTATION_JOB_ROOT
+  process.env.VIEWFORGE3D_ANNOTATION_JOB_ROOT
     ?? join(projectRoot, 'runs/annotation-jobs'),
 )
-const sourceModelInput = process.env.FACE3D_ANNOTATION_SOURCE_MODEL?.trim() ?? ''
+const sourceModelInput = process.env.VIEWFORGE3D_ANNOTATION_SOURCE_MODEL?.trim() ?? ''
 const sourceModel = sourceModelInput ? resolve(projectRoot, sourceModelInput) : null
-const sourceModelSha256 = process.env.FACE3D_ANNOTATION_SOURCE_SHA256?.trim().toLowerCase() ?? ''
-const sourceVersion = process.env.FACE3D_ANNOTATION_SOURCE_VERSION?.trim() || 'source-v1'
-const sourceRoute = process.env.FACE3D_ANNOTATION_ROUTE?.trim() || 'profile-loft-preview'
-const subjectProfile = process.env.FACE3D_ANNOTATION_SUBJECT_PROFILE?.trim() || 'generic-object'
-const realPerson = process.env.FACE3D_ANNOTATION_REAL_PERSON === 'true'
+const sourceModelSha256 = process.env.VIEWFORGE3D_ANNOTATION_SOURCE_SHA256?.trim().toLowerCase() ?? ''
+const sourceVersion = process.env.VIEWFORGE3D_ANNOTATION_SOURCE_VERSION?.trim() || 'source-v1'
+const sourceRoute = process.env.VIEWFORGE3D_ANNOTATION_ROUTE?.trim() || 'profile-loft-preview'
+const subjectProfile = process.env.VIEWFORGE3D_ANNOTATION_SUBJECT_PROFILE?.trim() || 'generic-object'
+const realPerson = process.env.VIEWFORGE3D_ANNOTATION_REAL_PERSON === 'true'
 const sourceConfigured = Boolean(sourceModel && /^[a-f0-9]{64}$/.test(sourceModelSha256))
 const jobs = new Map()
 const queue = []
@@ -204,7 +204,7 @@ function parseScreenshot(dataUrl) {
 function jobPrompt(job) {
   const annotationPath = join(job.directory, 'annotation.json')
   const screenshotPath = join(job.directory, 'viewport.png')
-  return `You are the local geometry-modification worker for Face3D Modeling Toolkit.
+  return `You are the local geometry-modification worker for ViewForge 3D.
 
 Read the immutable user annotation package:
 ${annotationPath}
@@ -391,7 +391,7 @@ const server = createServer(async (request, response) => {
     const codex = currentCodex()
     sendJson(response, 200, {
       ok: true,
-      service: 'face3d-annotation-bridge',
+      service: 'viewforge3d-annotation-bridge',
       host,
       codexAvailable: codex.available,
       codexVersion: codex.version,
@@ -483,7 +483,7 @@ const server = createServer(async (request, response) => {
 
 server.on('clientError', (_error, socket) => socket.end('HTTP/1.1 400 Bad Request\r\n\r\n'))
 server.listen(port, host, () => {
-  console.log(`[face3d-annotation-bridge] http://${host}:${port} dryRun=${dryRun} jobs=${jobRoot}`)
+  console.log(`[viewforge3d-annotation-bridge] http://${host}:${port} dryRun=${dryRun} jobs=${jobRoot}`)
 })
 
 function shutdown() {

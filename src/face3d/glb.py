@@ -175,7 +175,7 @@ def export_instanced_voxels(
         target=ARRAY_BUFFER,
     )
     document: dict[str, Any] = {
-        "asset": {"version": "2.0", "generator": "face3d 0.1.0"},
+        "asset": {"version": "2.0", "generator": "viewforge3d 0.1.0"},
         "extensionsUsed": ["EXT_mesh_gpu_instancing"],
         "extensionsRequired": ["EXT_mesh_gpu_instancing"],
         "scene": 0,
@@ -436,7 +436,9 @@ def export_pixel_instances(
         "asset": {
             "version": "2.0",
             "generator": (
-                "face3d pixel-flame-hybrid 0.1.0" if is_v2 else "face3d pixel-direct 0.1.0"
+                "viewforge3d pixel-flame-hybrid 0.1.0"
+                if is_v2
+                else "viewforge3d pixel-direct 0.1.0"
             ),
         },
         "extensionsUsed": extensions_used,
@@ -556,7 +558,7 @@ def export_colored_voxel_mesh(
         target=ELEMENT_ARRAY_BUFFER,
     )
     document: dict[str, Any] = {
-        "asset": {"version": "2.0", "generator": "face3d colored-coordinate-pixel 0.1.0"},
+        "asset": {"version": "2.0", "generator": "viewforge3d colored-coordinate-pixel 0.1.0"},
         "extensionsUsed": ["KHR_materials_specular"],
         "scene": 0,
         "scenes": [{"nodes": [0]}],
@@ -770,7 +772,7 @@ def export_colored_connected_surface(
     document: dict[str, Any] = {
         "asset": {
             "version": "2.0",
-            "generator": "face3d connected-pixel-surface 0.1.0",
+            "generator": "viewforge3d connected-pixel-surface 0.1.0",
         },
         "extensionsUsed": extensions_used,
         "scene": 0,
@@ -890,7 +892,7 @@ def export_colored_coordinate_unit_surface(
     document: dict[str, Any] = {
         "asset": {
             "version": "2.0",
-            "generator": "face3d connected-coordinate-unit-surface 0.1.0",
+            "generator": "viewforge3d connected-coordinate-unit-surface 0.1.0",
         },
         "extensionsUsed": extensions_used,
         "scene": 0,
@@ -1137,7 +1139,7 @@ def export_colored_instanced_voxels(
     document: dict[str, Any] = {
         "asset": {
             "version": "2.0",
-            "generator": "face3d solid-colored-coordinate-cubes 0.1.0",
+            "generator": "viewforge3d solid-colored-coordinate-cubes 0.1.0",
         },
         "extensionsUsed": extensions_used,
         "extensionsRequired": ["EXT_mesh_gpu_instancing"],

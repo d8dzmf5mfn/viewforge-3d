@@ -12,11 +12,11 @@ from face3d.config import Face3DConfig, load_config
 from face3d.errors import Face3DError, error_json
 
 app = typer.Typer(
-    name="face3d",
+    name="viewforge3d",
     no_args_is_help=True,
     invoke_without_command=True,
     pretty_exceptions_enable=False,
-    help="TemplateHeadV0 三视图非刚性人头重建",
+    help="ViewForge 3D 多视图模型构建与验证工具",
 )
 assets_app = typer.Typer(no_args_is_help=True, help="本地模型资产")
 app.add_typer(assets_app, name="assets")

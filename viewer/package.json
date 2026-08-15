@@ -1,5 +1,5 @@
 {
-  "name": "face3d-viewer",
+  "name": "viewforge-3d-viewer",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run && node bridge/annotation-bridge-args.test.mjs && node bridge/job-progress.test.mjs",
-    "test:e2e": "mkdir -p ../.tmp ../.local/matplotlib && UV_CACHE_DIR=../.uv-cache MPLCONFIGDIR=../.local/matplotlib uv run --project .. python ../scripts/create_demo_package.py ../.tmp/face-001.face3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v2_contract_fixture.py ../.tmp/face-v2-contract.face3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v3_contract_fixture.py ../.tmp/face-v3-contract.face3d && playwright test",
+    "test:e2e": "mkdir -p ../.tmp ../.local/matplotlib && UV_CACHE_DIR=../.uv-cache MPLCONFIGDIR=../.local/matplotlib uv run --project .. python ../scripts/create_demo_package.py ../.tmp/face-001.viewforge3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v2_contract_fixture.py ../.tmp/face-v2-contract.viewforge3d && UV_CACHE_DIR=../.uv-cache uv run --project .. python ../scripts/create_v3_contract_fixture.py ../.tmp/face-v3-contract.viewforge3d && playwright test",
     "typecheck": "tsc -b --pretty false",
     "test:annotation-e2e": "playwright test -c playwright.annotation.config.ts"
   },

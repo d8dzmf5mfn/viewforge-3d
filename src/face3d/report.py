@@ -396,7 +396,7 @@ def _build_report_v3(
     }
     report = {
         "schemaVersion": "3.0.0",
-        "generatedBy": f"face3d {__version__}",
+        "generatedBy": f"viewforge3d {__version__}",
         "gates": gates,
         "summary": {
             "automatedGatesPassed": all(
@@ -436,7 +436,7 @@ def _build_report_v3(
             "models": model_hashes,
             "configSha256": sha256_file(config.source_path),
             "codeSha256": package_code_hash(),
-            "face3dVersion": __version__,
+            "viewforge3dVersion": __version__,
             "platform": platform.platform(),
             "python": platform.python_version(),
             "visualBaseline": baseline_contract,
@@ -716,7 +716,7 @@ def _build_report_v2(
     automatic = {"A-input", "B-fit", "C-3d-pixel", "D-unified-anatomy", "E-skin-registration"}
     report = {
         "schemaVersion": "2.0.0",
-        "generatedBy": f"face3d {__version__}",
+        "generatedBy": f"viewforge3d {__version__}",
         "gates": gates,
         "summary": {
             "automatedGatesPassed": all(
@@ -750,7 +750,7 @@ def _build_report_v2(
             "models": model_hashes,
             "configSha256": sha256_file(config.source_path),
             "codeSha256": package_code_hash(),
-            "face3dVersion": __version__,
+            "viewforge3dVersion": __version__,
             "platform": platform.platform(),
             "python": platform.python_version(),
         },
@@ -1021,7 +1021,7 @@ def build_report(
     ]
     report = {
         "schemaVersion": "1.0.0",
-        "generatedBy": f"face3d {__version__}",
+        "generatedBy": f"viewforge3d {__version__}",
         "gates": gates,
         "summary": {
             "automatedGatesPassed": all(
@@ -1062,7 +1062,7 @@ def build_report(
             "models": model_hashes,
             "configSha256": sha256_file(config.source_path),
             "codeSha256": package_code_hash(),
-            "face3dVersion": __version__,
+            "viewforge3dVersion": __version__,
             "platform": platform.platform(),
             "python": platform.python_version(),
         },

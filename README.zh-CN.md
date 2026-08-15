@@ -1,17 +1,17 @@
-# Face3D Modeling Toolkit
+# ViewForge 3D
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Face3D Modeling Toolkit 是一个 Codex 插件和 Python 工作区，用于可追踪、带质量门槛的多视图
-二维到三维重建。它支持人脸和物体的连续模板拟合、局部几何精修、附着特征工作流、固定视角
-质量检查，以及不移动已验收几何的外观修改。
+ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据多视图二维证据，以可追踪、带质量
+门槛的方式构建三维模型。它适用于人物、风格化角色、产品和普通物体，支持连续模板拟合、局部
+几何精修、附着特征工作流、固定视角质量检查，以及不移动已验收几何的外观修改。
 
 工具包采用失败关闭策略：如果生产模板缺失、证据不足、拓扑损坏或视觉候选被拒绝，不会静默
 退回到看似合理的基础体或体素外壳。
 
 ## 仓库结构
 
-- `plugins/face3d-modeling-toolkit/` — 可分发的 Codex 插件源码。
+- `plugins/viewforge-3d-toolkit/` — 可分发的 Codex 插件源码。
 - `.agents/plugins/marketplace.json` — 仓库本地 Codex marketplace 清单。
 - `LICENSE` — 适用于仓库代码和插件分发内容的 Apache License 2.0 条款。
 - `src/face3d/` — Python 几何和验证实现。
@@ -29,7 +29,7 @@ Face3D Modeling Toolkit 是一个 Codex 插件和 Python 工作区，用于可�
 3. 不确定应使用哪条几何路线时，先调用路由技能：
 
 ```text
-$face3d-modeling-toolkit:face3d-toolkit-router
+$viewforge-3d-toolkit:viewforge-3d-router
 ```
 
 ## 边界
@@ -45,10 +45,10 @@ Git。GitHub Release 可以单独附带对比图片，但它不是插件包的�
 标注桥接器与来源无关。使用前必须显式配置锁定输入：
 
 ```bash
-export FACE3D_ANNOTATION_SOURCE_MODEL=/absolute/path/to/source.glb
-export FACE3D_ANNOTATION_SOURCE_SHA256=<64-character-sha256>
-export FACE3D_ANNOTATION_SOURCE_VERSION=source-v1
-export FACE3D_ANNOTATION_SUBJECT_PROFILE=generic-object
+export VIEWFORGE3D_ANNOTATION_SOURCE_MODEL=/absolute/path/to/source.glb
+export VIEWFORGE3D_ANNOTATION_SOURCE_SHA256=<64-character-sha256>
+export VIEWFORGE3D_ANNOTATION_SOURCE_VERSION=source-v1
+export VIEWFORGE3D_ANNOTATION_SUBJECT_PROFILE=generic-object
 npm --prefix viewer run annotate
 ```
 

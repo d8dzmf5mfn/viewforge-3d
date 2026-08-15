@@ -20,7 +20,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'FACE3D_ANNOTATION_EXECUTION_MODE=manual FACE3D_ANNOTATION_JOB_ROOT=../.tmp/annotation-jobs node bridge/annotation-bridge.mjs',
+      command: 'VIEWFORGE3D_ANNOTATION_EXECUTION_MODE=manual VIEWFORGE3D_ANNOTATION_JOB_ROOT=../.tmp/annotation-jobs node bridge/annotation-bridge.mjs',
       url: 'http://127.0.0.1:4174/api/annotation/health',
       reuseExistingServer: true,
       timeout: 120_000,

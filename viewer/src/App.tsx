@@ -44,12 +44,12 @@ export default function App() {
   useEffect(() => {
     if (demoRequestedRef.current || new URLSearchParams(window.location.search).get('demo') !== '1') return
     demoRequestedRef.current = true
-    void fetch('/demo.face3d', { cache: 'no-store' })
+    void fetch('/demo.viewforge3d', { cache: 'no-store' })
       .then((response) => {
         if (!response.ok) throw new Error(`演示结果包不可用 (${response.status})`)
         return response.blob()
       })
-      .then((blob) => load(new File([blob], 'face-001.face3d', { type: 'application/zip' })))
+      .then((blob) => load(new File([blob], 'face-001.viewforge3d', { type: 'application/zip' })))
       .catch((reason: unknown) => {
         setError(reason instanceof Error ? reason.message : '无法载入演示结果包')
       })
@@ -87,11 +87,11 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand">3D Face Lab</div>
+        <div className="brand">ViewForge 3D</div>
         <span className="header-rule" />
         <div className="subject-name">{facePackage?.name ?? '未加载'}<ChevronDown size={16} /></div>
         <div className="header-actions">
-          <input ref={inputRef} type="file" accept=".face3d,.zip" hidden onChange={(event) => void load(event.target.files?.[0])} />
+          <input ref={inputRef} type="file" accept=".viewforge3d,.zip" hidden onChange={(event) => void load(event.target.files?.[0])} />
           <button className="button secondary" onClick={() => inputRef.current?.click()} disabled={loading}><FolderOpen />{loading ? '解析中…' : '加载结果包'}</button>
           <button className="button primary" onClick={exportReport} disabled={!facePackage}><FileText />导出验收报告</button>
         </div>

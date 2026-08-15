@@ -102,7 +102,7 @@ def write_pixel_records(
     count = int(len(values["model_uv"]))
     schema = {
         "schemaVersion": "1.0.0",
-        "format": "face3d-pixel-direct",
+        "format": "viewforge3d-pixel-direct",
         "endianness": "little",
         "magic": MAGIC.decode("ascii"),
         "headerBytes": HEADER.size,
@@ -234,7 +234,7 @@ def write_pixel_records_v2(
     count = int(len(values["source_uv"]))
     schema = {
         "schemaVersion": "2.0.0",
-        "format": "face3d-pixel-flame-hybrid",
+        "format": "viewforge3d-pixel-flame-hybrid",
         "endianness": "little",
         "magic": MAGIC.decode("ascii"),
         "headerBytes": HEADER.size,

@@ -190,7 +190,7 @@ def create(output: Path) -> None:
                 "models": {},
                 "configSha256": "33" * 32,
                 "codeSha256": "44" * 32,
-                "face3dVersion": "0.1.0",
+                "viewforge3dVersion": "0.1.0",
             },
             "cameras": [],
             "fit": {

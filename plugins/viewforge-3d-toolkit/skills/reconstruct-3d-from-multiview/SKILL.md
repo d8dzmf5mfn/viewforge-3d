@@ -29,11 +29,11 @@ For a non-face object, read
 [`references/object-template-route.md`](references/object-template-route.md) before choosing the
 template, evidence contract, geometry stages, or packaging claim.
 If the accepted source already exists and the task is strict contour/landmark refinement, invoke
-`$face3d-modeling-toolkit:landmark-guided-refinement` instead of treating the edit as a new
+`$viewforge-3d-toolkit:landmark-guided-refinement` instead of treating the edit as a new
 reconstruction.
 Read [`references/profile-loft-preview.md`](references/profile-loft-preview.md) when building,
-auditing, or polishing a loft. For the 3D Face Lab repository, also read
-[`references/face3d-local-adapter.md`](references/face3d-local-adapter.md).
+auditing, or polishing a loft. For the ViewForge 3D repository, also read
+[`references/viewforge-local-adapter.md`](references/viewforge-local-adapter.md).
 Read
 [`references/attached-feature-integration-preview.md`](references/attached-feature-integration-preview.md)
 before building, mirroring, positioning, or joining a nose, ear, horn, handle, limb, or other

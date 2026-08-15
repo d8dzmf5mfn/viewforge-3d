@@ -161,7 +161,7 @@ export async function loadFacePackage(file: File): Promise<FacePackage> {
     : entries['textures/skin-confidence.png']
   const confidenceMapUrl = confidenceBytes ? objectUrl(confidenceBytes, 'image/png', urls) : undefined
   return {
-    name: file.name.replace(/\.face3d$/i, ''),
+    name: file.name.replace(/\.viewforge3d$/i, ''),
     manifest,
     report,
     references,

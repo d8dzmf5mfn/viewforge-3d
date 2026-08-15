@@ -704,7 +704,7 @@ def _require_confirmed_masks(
             details={
                 "confirmation": str(confirmation_path),
                 "mismatchedViews": mismatches,
-                "nextCommand": f"face3d confirm-masks --run {run_dir}",
+                "nextCommand": f"viewforge3d confirm-masks --run {run_dir}",
             },
         )
 

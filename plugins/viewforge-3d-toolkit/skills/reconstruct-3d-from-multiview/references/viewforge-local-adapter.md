@@ -1,4 +1,4 @@
-# Face3D workspace adapter
+# ViewForge 3D workspace adapter
 
 Use this adapter only when the project contains `configs/face-v3.yaml`,
 `src/face3d/stages/template_v3.py`, and the TemplateHeadV0 anatomy assets.
@@ -65,7 +65,7 @@ Run from the repository root without downloading:
 
 ```bash
 UV_CACHE_DIR=.uv-cache uv sync --all-groups --offline
-.venv/bin/face3d assets status --config configs/face-v3.yaml
+.venv/bin/viewforge3d assets status --config configs/face-v3.yaml
 .venv/bin/ruff check src tests scripts
 ```
 
@@ -78,11 +78,11 @@ any single or cumulative download above 1 GB.
 Name the source images `front`, `left45`, and `right45` using supported image extensions, then run:
 
 ```bash
-.venv/bin/face3d validate-input \
+.venv/bin/viewforge3d validate-input \
   --input <input-dir> \
   --config configs/face-v3.yaml
 
-.venv/bin/face3d reconstruct \
+.venv/bin/viewforge3d reconstruct \
   --input <input-dir> \
   --config configs/face-v3.yaml \
   --output <run-dir>
@@ -92,16 +92,16 @@ The first reconstruction is expected to stop at `mask-review-required` when mask
 confirmed. Review the generated masks, then run:
 
 ```bash
-.venv/bin/face3d confirm-masks --run <run-dir>
-.venv/bin/face3d reconstruct \
+.venv/bin/viewforge3d confirm-masks --run <run-dir>
+.venv/bin/viewforge3d reconstruct \
   --input <input-dir> \
   --config configs/face-v3.yaml \
   --output <run-dir>
 
-.venv/bin/face3d package \
+.venv/bin/viewforge3d package \
   --run <run-dir> \
   --config configs/face-v3.yaml \
-  --output <run-dir>.face3d
+  --output <run-dir>.viewforge3d
 ```
 
 Do not confirm masks without visual inspection. Do not retry a failed fit by loosening all gates.
@@ -120,7 +120,7 @@ npm --prefix viewer run test:e2e
 ```
 
 Check that `models/head.glb` contains `HeadSkin`, `Eyeball.L`, and `Eyeball.R`; fitted, skin, QA,
-manifest, and GLB geometry hashes match; canonical UV does not move; and `.face3d` contains no
+manifest, and GLB geometry hashes match; canonical UV does not move; and `.viewforge3d` contains no
 voxel/pixel final surface. Inspect neutral and skin renders at front, left/right 45 degrees, and
 side before user signoff.
 

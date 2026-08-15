@@ -21,7 +21,7 @@ export interface FaceManifest {
     models: Record<string, string>
     configSha256: string
     codeSha256: string
-    face3dVersion: string
+    viewforge3dVersion: string
   }
   cameras: CameraRecord[]
   pixel?: {

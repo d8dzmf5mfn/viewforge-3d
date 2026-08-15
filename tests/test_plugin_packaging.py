@@ -6,7 +6,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-PACKAGE_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "package_face3d_plugin.py"
+PACKAGE_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "package_viewforge_plugin.py"
 
 
 def _package_fixture(root: Path, skill_text: str = "# Generic skill\n") -> Path:

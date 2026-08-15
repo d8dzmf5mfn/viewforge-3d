@@ -544,7 +544,7 @@ def test_template_fit_reproduces_exact_synthetic_three_views(tmp_path: Path) -> 
     assert (run / "qa" / "fixed-view-side.png").is_file()
     assert (run / "qa" / "fixed-view-skin-side.png").is_file()
 
-    package = tmp_path / "synthetic.face3d"
+    package = tmp_path / "synthetic.viewforge3d"
     result = package_run(run, package, config)
     assert result["ok"]
     with zipfile.ZipFile(package) as archive:

@@ -780,7 +780,7 @@ def validate_only(
 ) -> dict[str, Any]:
     if output is not None:
         return run_intake(input_dir, output, config, stop_for_mask_review=False)
-    with tempfile.TemporaryDirectory(prefix="face3d-validate-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="viewforge3d-validate-") as temporary:
         result = run_intake(input_dir, Path(temporary), config, stop_for_mask_review=False)
         result["maskConfirmed"] = False
         result["note"] = "验证使用临时自动 mask；重建运行仍需确认正式 mask"

@@ -1326,7 +1326,7 @@ def _write_front_relief_asset(
     )
     schema = {
         "schemaVersion": "1.0.0",
-        "format": "face3d-front-relief-3d-pixel-cuboid-jsonl",
+        "format": "viewforge3d-front-relief-3d-pixel-cuboid-jsonl",
         "recordCount": len(geometry.grid_xyz),
         "recordOrder": "coarse cuboid shell, then fine zMax scan layer; each layer x-major",
         "units": "meter",

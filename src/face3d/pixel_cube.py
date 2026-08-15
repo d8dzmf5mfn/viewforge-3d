@@ -189,7 +189,7 @@ def create_pixel_cube(destination: Path, spec: PixelCubeSpec | None = None) -> d
     )
     schema = {
         "schemaVersion": "1.0.0",
-        "format": "face3d-procedural-3d-pixel-cube-jsonl",
+        "format": "viewforge3d-procedural-3d-pixel-cube-jsonl",
         "recordCount": len(indices),
         "recordOrder": "x-major, then y, then z; boundary cells only",
         "units": "meter",

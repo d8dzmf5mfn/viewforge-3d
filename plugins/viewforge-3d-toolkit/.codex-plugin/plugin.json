@@ -1,0 +1,38 @@
+{
+  "name": "viewforge-3d-toolkit",
+  "version": "0.4.0+codex.20260815062009",
+  "description": "Quality-gated multi-view 3D model construction, template fitting, mesh refinement, and same-geometry appearance skills for people, characters, products, and objects.",
+  "author": {
+    "name": "ViewForge 3D Contributors"
+  },
+  "homepage": "https://github.com/d8dzmf5mfn/viewforge-3d",
+  "repository": "https://github.com/d8dzmf5mfn/viewforge-3d",
+  "license": "Apache-2.0",
+  "keywords": [
+    "3d",
+    "multiview",
+    "reconstruction",
+    "mesh",
+    "modeling"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ViewForge 3D",
+    "shortDescription": "Build and refine traceable 3D models from multi-view evidence.",
+    "longDescription": "Build and audit multi-view 3D models for people, characters, products, and general objects; fit continuous templates, refine bounded regions, validate topology and provenance, and apply appearance without moving accepted geometry.",
+    "developerName": "ViewForge 3D Contributors",
+    "category": "Creative",
+    "capabilities": [
+      "Route",
+      "Reconstruct",
+      "Refine",
+      "Texture",
+      "Validate"
+    ],
+    "defaultPrompt": [
+      "Use $viewforge-3d-toolkit:viewforge-3d-router to choose the safe workflow for this 3D task.",
+      "Use $viewforge-3d-toolkit:reconstruct-3d-from-multiview to build an unskinned object preview from 2D evidence.",
+      "Use $viewforge-3d-toolkit:same-geometry-skin to apply appearance without moving accepted geometry."
+    ]
+  }
+}

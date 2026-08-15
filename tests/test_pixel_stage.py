@@ -179,7 +179,7 @@ def test_pixel_direct_stage_emits_traceable_cells_and_closed_mesh(tmp_path: Path
         {"elapsedSeconds": 1.0, "peakRssBytes": 256 * 1024**2, "deterministic": True},
     )
     write_notices(run)
-    package = tmp_path / "synthetic.face3d"
+    package = tmp_path / "synthetic.viewforge3d"
     packaged = package_run(run, package, config)
     assert manifest["mode"] == "pixel-direct"
     assert manifest["pixel"]["binarySha256"]

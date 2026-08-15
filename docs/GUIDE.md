@@ -20,7 +20,7 @@ From the cloned repository root, register the repo-local marketplace and install
 
 ```bash
 codex plugin marketplace add "$(pwd)"
-codex plugin add face3d-modeling-toolkit@face3d-github
+codex plugin add viewforge-3d-toolkit@viewforge-3d
 ```
 
 Start a new Codex task after installation so the skill inventory is refreshed. To update a cloned
@@ -31,23 +31,23 @@ copy, pull the repository, reinstall the same plugin entry, and start another ne
 Use the router for an end-to-end request or when the correct branch is unclear:
 
 ```text
-Use $face3d-modeling-toolkit:face3d-toolkit-router to choose the safe route for this model.
+Use $viewforge-3d-toolkit:viewforge-3d-router to choose the safe route for this model.
 ```
 
 Call a specialist directly when the stage is already known:
 
 ```text
-Use $face3d-modeling-toolkit:reconstruct-3d-from-multiview to build an unskinned object preview from these images.
+Use $viewforge-3d-toolkit:reconstruct-3d-from-multiview to build an unskinned object preview from these images.
 
-Use $face3d-modeling-toolkit:landmark-guided-refinement to fit these accepted facial landmarks without changing hidden depth.
+Use $viewforge-3d-toolkit:landmark-guided-refinement to fit these accepted facial landmarks without changing hidden depth.
 
-Use $face3d-modeling-toolkit:annotation-region-lowering to press this annotated region inward without smoothing.
+Use $viewforge-3d-toolkit:annotation-region-lowering to press this annotated region inward without smoothing.
 
-Use $face3d-modeling-toolkit:topology-preserving-smooth to fair only this approved region and preserve topology and UVs.
+Use $viewforge-3d-toolkit:topology-preserving-smooth to fair only this approved region and preserve topology and UVs.
 
-Use $face3d-modeling-toolkit:blender-manual-polish to guide a bounded manual Blender correction.
+Use $viewforge-3d-toolkit:blender-manual-polish to guide a bounded manual Blender correction.
 
-Use $face3d-modeling-toolkit:same-geometry-skin to change appearance without moving accepted geometry.
+Use $viewforge-3d-toolkit:same-geometry-skin to change appearance without moving accepted geometry.
 ```
 
 In the Codex app, the plugin can also be referenced with its plugin mention and then described in
@@ -110,20 +110,20 @@ Validate every skill and then the plugin manifest:
 
 ```bash
 python /path/to/skill-creator/scripts/quick_validate.py \
-  plugins/face3d-modeling-toolkit/skills/reconstruct-3d-from-multiview
+  plugins/viewforge-3d-toolkit/skills/reconstruct-3d-from-multiview
 
 python /path/to/plugin-creator/scripts/validate_plugin.py \
-  plugins/face3d-modeling-toolkit
+  plugins/viewforge-3d-toolkit
 ```
 
 Build the deterministic ZIP:
 
 ```bash
 source .venv/bin/activate
-python scripts/package_face3d_plugin.py \
-  --plugin plugins/face3d-modeling-toolkit \
+python scripts/package_viewforge_plugin.py \
+  --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/face3d-modeling-toolkit-0.3.4.zip
+  --output dist/viewforge-3d-toolkit-0.4.0.zip
 ```
 
 The ZIP contains the Apache-2.0 license, plugin manifest, all skills, and separate English and

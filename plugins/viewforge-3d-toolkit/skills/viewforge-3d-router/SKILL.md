@@ -1,9 +1,9 @@
 ---
-name: face3d-toolkit-router
-description: "Route Face3D Modeling Toolkit tasks to the correct reconstruction, landmark refinement, annotation lowering, smoothing, Blender polishing, or same-geometry skin skill. Use when the user asks how to call the plugin, which Face3D skill to use, or requests an end-to-end workflow spanning multiple geometry or appearance stages."
+name: viewforge-3d-router
+description: "Route ViewForge 3D tasks to the correct reconstruction, landmark refinement, annotation lowering, smoothing, Blender polishing, or same-geometry appearance skill. Use when the user asks how to call the plugin, which ViewForge 3D skill to use, or requests an end-to-end workflow spanning multiple geometry or appearance stages for a person, character, product, or object."
 ---
 
-# Face3D toolkit router
+# ViewForge 3D router
 
 Use the smallest skill set that covers the request. Keep geometry stages, appearance stages, and
 user acceptance separate.
@@ -12,18 +12,18 @@ user acceptance separate.
 
 Use the fully qualified name when calling a skill from this plugin:
 
-- `$face3d-modeling-toolkit:reconstruct-3d-from-multiview` — reconstruct or audit source lineage.
-- `$face3d-modeling-toolkit:landmark-guided-refinement` — fit reference contours, then refine
+- `$viewforge-3d-toolkit:reconstruct-3d-from-multiview` — reconstruct or audit source lineage.
+- `$viewforge-3d-toolkit:landmark-guided-refinement` — fit reference contours, then refine
   classified facial features with fixed-view landmark QA.
-- `$face3d-modeling-toolkit:annotation-region-lowering` — apply a submitted inward/press-down
+- `$viewforge-3d-toolkit:annotation-region-lowering` — apply a submitted inward/press-down
   annotation without adding smoothing.
-- `$face3d-modeling-toolkit:blender-manual-polish` — guide a manual local Blender polish.
-- `$face3d-modeling-toolkit:topology-preserving-smooth` — run an explicitly authorized bounded
+- `$viewforge-3d-toolkit:blender-manual-polish` — guide a manual local Blender polish.
+- `$viewforge-3d-toolkit:topology-preserving-smooth` — run an explicitly authorized bounded
   smoothing or fairing pass.
-- `$face3d-modeling-toolkit:same-geometry-skin` — change textures or materials while locking
+- `$viewforge-3d-toolkit:same-geometry-skin` — change textures or materials while locking
   accepted geometry and UVs.
 
-Invoke this router as `$face3d-modeling-toolkit:face3d-toolkit-router` when the correct branch is
+Invoke this router as `$viewforge-3d-toolkit:viewforge-3d-router` when the correct branch is
 unclear or the request spans multiple branches.
 
 ## Route the request

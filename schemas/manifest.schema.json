@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local.3d-face-lab/schemas/manifest-1.0.0.json",
-  "title": "3D Face Lab result manifest",
+  "title": "ViewForge 3D result manifest",
   "type": "object",
   "additionalProperties": false,
   "required": [

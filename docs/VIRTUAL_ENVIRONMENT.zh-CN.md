@@ -37,8 +37,8 @@ python -c "import cv2, numpy, open3d, scipy, trimesh; print('environment ready')
 
 ## Release ZIP：使用 uv
 
-Release ZIP 包含插件及辅助脚本的最小依赖，但不包含完整 `face3d` Python 工作区。解压后进入顶层
-目录并运行：
+Release ZIP 包含插件及辅助脚本的最小依赖，但不包含完整 ViewForge 3D Python 工作区。解压后
+进入顶层目录并运行：
 
 ```bash
 uv python install 3.11

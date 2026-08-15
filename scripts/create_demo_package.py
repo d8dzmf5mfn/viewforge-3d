@@ -33,7 +33,7 @@ def create(output: Path) -> dict[str, object]:
         raise FileNotFoundError(f"missing committed 2D demo views: {INPUT}")
     started = time.perf_counter()
     config = load_config(CONFIG)
-    with tempfile.TemporaryDirectory(prefix="face3d-demo-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="viewforge3d-demo-") as temporary:
         run = Path(temporary)
         # This confirmation is allowed only for the deterministic repository QA
         # fixture. Production reconstruction still stops for human mask review.
@@ -66,7 +66,7 @@ def create(output: Path) -> dict[str, object]:
         packaged = package_run(run, output, config)
     return {
         **packaged,
-        "face3dVersion": __version__,
+        "viewforge3dVersion": __version__,
         "reconstruction": reconstruction,
         "automatedGatesPassed": report["summary"]["automatedGatesPassed"],
         "visualReviewStatus": report["summary"]["visualReviewStatus"],

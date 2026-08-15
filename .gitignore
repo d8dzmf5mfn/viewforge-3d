@@ -21,6 +21,7 @@ viewer/public/annotation/*.glb
 viewer/public/annotation/model.json
 viewer/public/annotation/*-pick-proxy.json
 *.face3d
+*.viewforge3d
 runs/
 
 # Project-specific development history retained locally, not published.

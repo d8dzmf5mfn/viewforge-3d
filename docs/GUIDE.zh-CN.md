@@ -20,7 +20,7 @@
 
 ```bash
 codex plugin marketplace add "$(pwd)"
-codex plugin add face3d-modeling-toolkit@face3d-github
+codex plugin add viewforge-3d-toolkit@viewforge-3d
 ```
 
 安装后新建一个 Codex 任务，使技能清单重新加载。更新克隆仓库时，先拉取代码，再安装同一个插件
@@ -31,23 +31,23 @@ codex plugin add face3d-modeling-toolkit@face3d-github
 需要端到端处理，或不确定应选择哪条路线时，调用路由技能：
 
 ```text
-使用 $face3d-modeling-toolkit:face3d-toolkit-router 为这个模型选择安全路线。
+使用 $viewforge-3d-toolkit:viewforge-3d-router 为这个模型选择安全路线。
 ```
 
 已经明确处理阶段时，可以直接调用专项技能：
 
 ```text
-使用 $face3d-modeling-toolkit:reconstruct-3d-from-multiview 根据这些二维图片构建无贴皮物体预览。
+使用 $viewforge-3d-toolkit:reconstruct-3d-from-multiview 根据这些二维图片构建无贴皮物体预览。
 
-使用 $face3d-modeling-toolkit:landmark-guided-refinement 拟合已验收的人脸关键点，不改变不可见深度。
+使用 $viewforge-3d-toolkit:landmark-guided-refinement 拟合已验收的人脸关键点，不改变不可见深度。
 
-使用 $face3d-modeling-toolkit:annotation-region-lowering 将标注区域向内压低，不进行平滑。
+使用 $viewforge-3d-toolkit:annotation-region-lowering 将标注区域向内压低，不进行平滑。
 
-使用 $face3d-modeling-toolkit:topology-preserving-smooth 仅平顺已批准区域，并保持拓扑和 UV。
+使用 $viewforge-3d-toolkit:topology-preserving-smooth 仅平顺已批准区域，并保持拓扑和 UV。
 
-使用 $face3d-modeling-toolkit:blender-manual-polish 指导一次有边界的 Blender 手工修正。
+使用 $viewforge-3d-toolkit:blender-manual-polish 指导一次有边界的 Blender 手工修正。
 
-使用 $face3d-modeling-toolkit:same-geometry-skin 修改外观，不移动已验收几何。
+使用 $viewforge-3d-toolkit:same-geometry-skin 修改外观，不移动已验收几何。
 ```
 
 在 Codex App 中也可以提及插件后直接用自然语言描述任务。完整限定技能名最不容易产生歧义。
@@ -108,20 +108,20 @@ python scripts/build_iphone17_unskinned.py \
 
 ```bash
 python /path/to/skill-creator/scripts/quick_validate.py \
-  plugins/face3d-modeling-toolkit/skills/reconstruct-3d-from-multiview
+  plugins/viewforge-3d-toolkit/skills/reconstruct-3d-from-multiview
 
 python /path/to/plugin-creator/scripts/validate_plugin.py \
-  plugins/face3d-modeling-toolkit
+  plugins/viewforge-3d-toolkit
 ```
 
 生成确定性 ZIP：
 
 ```bash
 source .venv/bin/activate
-python scripts/package_face3d_plugin.py \
-  --plugin plugins/face3d-modeling-toolkit \
+python scripts/package_viewforge_plugin.py \
+  --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/face3d-modeling-toolkit-0.3.4.zip
+  --output dist/viewforge-3d-toolkit-0.4.0.zip
 ```
 
 ZIP 包含 Apache-2.0 许可证、插件清单、全部技能，以及相互独立的中英文 README、详细指南和

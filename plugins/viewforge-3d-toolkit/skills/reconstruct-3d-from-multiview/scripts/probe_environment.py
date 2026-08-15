@@ -89,7 +89,7 @@ def main() -> int:
     )
     parser.add_argument("--project", type=Path, default=Path.cwd())
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--require-face3d", action="store_true")
+    parser.add_argument("--require-viewforge3d", action="store_true")
     parser.add_argument("--maximum-hash-file-mb", type=float, default=128.0)
     arguments = parser.parse_args()
 
@@ -105,8 +105,8 @@ def main() -> int:
     markers = {
         "pyproject": project / "pyproject.toml",
         "uvLock": project / "uv.lock",
-        "face3dSource": project / "src/face3d",
-        "face3dCli": project / ".venv/bin/face3d",
+        "viewforge3dSource": project / "src/face3d",
+        "viewforge3dCli": project / ".venv/bin/viewforge3d",
         "faceV3Config": project / "configs/face-v3.yaml",
         "templateHeadV0": (
             project / "assets/template-head-v0/anatomy/template-head-v0.unified.npz"
@@ -137,7 +137,7 @@ def main() -> int:
     )
     face_markers = all(
         markers[name].exists()
-        for name in ("face3dSource", "face3dCli", "faceV3Config", "templateHeadV0")
+        for name in ("viewforge3dSource", "viewforge3dCli", "faceV3Config", "templateHeadV0")
     )
     payload: dict[str, Any] = {
         "schemaVersion": 1,
@@ -177,7 +177,7 @@ def main() -> int:
                 and executable_paths["npm"]
                 and markers["viewerPackage"].is_file()
             ),
-            "currentFace3dAdapter": face_modules and face_markers,
+            "currentViewForge3DAdapter": face_modules and face_markers,
         },
         "resourcePolicy": {
             "networkAccessed": False,
@@ -189,7 +189,10 @@ def main() -> int:
     if arguments.output is not None:
         atomic_write_json(arguments.output.expanduser().resolve(), payload)
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
-    if arguments.require_face3d and not payload["capabilities"]["currentFace3dAdapter"]:
+    if (
+        arguments.require_viewforge3d
+        and not payload["capabilities"]["currentViewForge3DAdapter"]
+    ):
         return 2
     return 0 if payload["ready"] else 2
 

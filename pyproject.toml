@@ -3,9 +3,9 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "face3d"
+name = "viewforge3d"
 version = "0.1.0"
-description = "Traceable three-view non-rigid reconstruction on a unified head template"
+description = "Traceable multi-view 3D model construction and geometry validation"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -33,7 +33,7 @@ dependencies = [
 legacy-sdf = []
 
 [project.scripts]
-face3d = "face3d.cli:main"
+viewforge3d = "face3d.cli:main"
 
 [dependency-groups]
 dev = [

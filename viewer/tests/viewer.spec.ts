@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const demo = path.resolve('../.tmp/face-001.face3d')
-const demoV2 = path.resolve('../.tmp/face-v2-contract.face3d')
-const demoV3 = path.resolve('../.tmp/face-v3-contract.face3d')
+const demo = path.resolve('../.tmp/face-001.viewforge3d')
+const demoV2 = path.resolve('../.tmp/face-v2-contract.viewforge3d')
+const demoV3 = path.resolve('../.tmp/face-v3-contract.viewforge3d')
 const viewerContract = (JSON.parse(
   fs.readFileSync(path.resolve('../quality/template-head-v0-contract.json'), 'utf8'),
 ) as {

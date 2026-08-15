@@ -1,18 +1,18 @@
-# Face3D Modeling Toolkit
+# ViewForge 3D
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Face3D Modeling Toolkit is a Codex plugin and Python workspace for traceable, quality-gated
-multi-view 2D-to-3D reconstruction. It supports continuous-template fitting for faces and objects,
-bounded geometry refinement, attached-feature workflows, fixed-view QA, and appearance changes
-that preserve accepted geometry.
+ViewForge 3D is a Codex plugin and Python workspace for traceable, quality-gated construction of
+3D models from multi-view 2D evidence. It supports people, stylized characters, products, and
+general objects through continuous-template fitting, bounded geometry refinement, attached-feature
+workflows, fixed-view QA, and appearance changes that preserve accepted geometry.
 
 The toolkit fails closed: a missing production template, insufficient evidence, broken topology,
 or rejected visual candidate does not silently fall back to a plausible primitive or voxel shell.
 
 ## Repository layout
 
-- `plugins/face3d-modeling-toolkit/` — distributable Codex plugin source.
+- `plugins/viewforge-3d-toolkit/` — distributable Codex plugin source.
 - `.agents/plugins/marketplace.json` — repo-local Codex marketplace manifest.
 - `LICENSE` — Apache License 2.0 terms for the repository code and plugin distribution.
 - `src/face3d/` — Python geometry and validation implementation.
@@ -31,7 +31,7 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 3. Use the router when the correct geometry workflow is unclear:
 
 ```text
-$face3d-modeling-toolkit:face3d-toolkit-router
+$viewforge-3d-toolkit:viewforge-3d-router
 ```
 
 ## Boundaries
@@ -48,10 +48,10 @@ virtual environments, caches, and other run artifacts are intentionally excluded
 The annotation bridge is source-agnostic. Configure its locked input explicitly before use:
 
 ```bash
-export FACE3D_ANNOTATION_SOURCE_MODEL=/absolute/path/to/source.glb
-export FACE3D_ANNOTATION_SOURCE_SHA256=<64-character-sha256>
-export FACE3D_ANNOTATION_SOURCE_VERSION=source-v1
-export FACE3D_ANNOTATION_SUBJECT_PROFILE=generic-object
+export VIEWFORGE3D_ANNOTATION_SOURCE_MODEL=/absolute/path/to/source.glb
+export VIEWFORGE3D_ANNOTATION_SOURCE_SHA256=<64-character-sha256>
+export VIEWFORGE3D_ANNOTATION_SOURCE_VERSION=source-v1
+export VIEWFORGE3D_ANNOTATION_SUBJECT_PROFILE=generic-object
 npm --prefix viewer run annotate
 ```
 

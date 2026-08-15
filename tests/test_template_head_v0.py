@@ -89,7 +89,7 @@ def _fixture_package(
 
 
 def test_prepare_template_head_v0_preserves_compute_and_uv_topology(tmp_path: Path) -> None:
-    package = tmp_path / "fixture.face3d"
+    package = tmp_path / "fixture.viewforge3d"
     _fixture_package(package)
     baseline = tmp_path / "baseline.png"
     Image.new("RGB", (320, 180), (235, 235, 235)).save(baseline)
@@ -127,7 +127,7 @@ def test_prepare_template_head_v0_preserves_compute_and_uv_topology(tmp_path: Pa
 
 
 def test_prepare_template_head_v0_rejects_render_geometry_drift(tmp_path: Path) -> None:
-    package = tmp_path / "mismatch.face3d"
+    package = tmp_path / "mismatch.viewforge3d"
     _fixture_package(package, offset_render=True)
     baseline = tmp_path / "baseline.png"
     Image.new("RGB", (32, 32), (200, 200, 200)).save(baseline)
@@ -141,7 +141,7 @@ def test_prepare_template_head_v0_rejects_render_geometry_drift(tmp_path: Path) 
 def test_prepare_template_head_v0_generates_stable_uv_when_skin_is_absent(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "smooth-only.face3d"
+    package = tmp_path / "smooth-only.viewforge3d"
     _fixture_package(package, include_skin=False)
     baseline = tmp_path / "baseline.png"
     Image.new("RGB", (32, 32), (200, 200, 200)).save(baseline)
@@ -199,7 +199,7 @@ def test_unify_compute_mesh_records_non_sdf_exact_union(
 
 
 def test_prepare_template_head_v0_accepts_licensed_direct_glb(tmp_path: Path) -> None:
-    package = tmp_path / "source.face3d"
+    package = tmp_path / "source.viewforge3d"
     _fixture_package(package)
     source_glb = tmp_path / "source.glb"
     with zipfile.ZipFile(package) as archive:
@@ -236,7 +236,7 @@ def test_prepare_template_head_v0_accepts_licensed_direct_glb(tmp_path: Path) ->
 
 
 def test_raw_template_hash_fails_closed(tmp_path: Path) -> None:
-    package = tmp_path / "fixture.face3d"
+    package = tmp_path / "fixture.viewforge3d"
     _fixture_package(package)
     baseline = tmp_path / "baseline.png"
     Image.new("RGB", (32, 32), (200, 200, 200)).save(baseline)
