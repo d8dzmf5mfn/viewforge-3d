@@ -93,8 +93,10 @@ def build_package(plugin: Path, repository_root: Path, output: Path) -> dict[str
     if plugin.name != plugin_name:
         raise ValueError("plugin directory and manifest name must match")
 
+    plugin_license = plugin / "LICENSE"
+    repository_license = repository_root / "LICENSE"
     extras = (
-        repository_root / "LICENSE",
+        repository_license,
         repository_root / "README.md",
         repository_root / "README.zh-CN.md",
         repository_root / "docs" / "GUIDE.md",
@@ -102,15 +104,21 @@ def build_package(plugin: Path, repository_root: Path, output: Path) -> dict[str
         repository_root / "docs" / "VIRTUAL_ENVIRONMENT.md",
         repository_root / "docs" / "VIRTUAL_ENVIRONMENT.zh-CN.md",
     )
-    if any(not path.is_file() for path in extras):
+    if not plugin_license.is_file() or any(not path.is_file() for path in extras):
         raise FileNotFoundError(
-            "Apache-2.0 license and English and Simplified Chinese documentation are required"
+            "matching repository and plugin Apache-2.0 licenses plus English and Simplified "
+            "Chinese documentation are required"
         )
+    if plugin_license.read_bytes() != repository_license.read_bytes():
+        raise ValueError("plugin LICENSE must exactly match the repository LICENSE")
 
     output.parent.mkdir(parents=True, exist_ok=True)
+    extra_relatives = {path.relative_to(repository_root).as_posix() for path in extras}
     with zipfile.ZipFile(output, "w") as archive:
         for source in _admitted_files(plugin):
             relative = source.relative_to(plugin).as_posix()
+            if relative in extra_relatives:
+                continue
             _archive_file(archive, source, f"{plugin_name}/{relative}")
         for source in extras:
             relative = source.relative_to(repository_root).as_posix()

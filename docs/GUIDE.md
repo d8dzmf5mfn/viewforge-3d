@@ -123,7 +123,7 @@ source .venv/bin/activate
 python scripts/package_face3d_plugin.py \
   --plugin plugins/face3d-modeling-toolkit \
   --repository-root . \
-  --output dist/face3d-modeling-toolkit-0.3.3.zip
+  --output dist/face3d-modeling-toolkit-0.3.4.zip
 ```
 
 The ZIP contains the Apache-2.0 license, plugin manifest, all skills, and separate English and

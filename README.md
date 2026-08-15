@@ -63,3 +63,6 @@ from the published repository.
 Repository code, documentation, and the distributable plugin are licensed under the
 [Apache License 2.0](LICENSE). Third-party reference images and trademarks retain their respective
 owners' rights and are not relicensed by this project.
+
+The plugin directory carries an identical `LICENSE` copy so standalone Codex installations retain
+the license terms.

@@ -58,3 +58,5 @@ npm --prefix viewer run annotate
 
 仓库代码、文档和可分发插件采用 [Apache License 2.0](LICENSE)。第三方参考图片和商标仍归
 各自权利人所有，本项目许可证不会对它们重新授权。
+
+插件目录包含内容完全一致的 `LICENSE` 副本，确保 Codex 独立安装后仍保留许可证条款。

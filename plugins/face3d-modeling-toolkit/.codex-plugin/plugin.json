@@ -1,6 +1,6 @@
 {
   "name": "face3d-modeling-toolkit",
-  "version": "0.3.3+codex.20260815031852",
+  "version": "0.3.4+codex.20260815032803",
   "description": "Quality-gated multi-view reconstruction, template fitting, mesh refinement, and same-geometry appearance skills for faces, stylized characters, and objects.",
   "author": {
     "name": "Face3D Toolkit Contributors"

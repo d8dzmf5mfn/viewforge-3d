@@ -21,7 +21,9 @@ def _package_fixture(root: Path, skill_text: str = "# Generic skill\n") -> Path:
     )
     skill.write_text(skill_text, encoding="utf-8")
     (plugin / "requirements.txt").write_text("numpy>=1.26,<2\n", encoding="utf-8")
-    (root / "LICENSE").write_text("Apache License 2.0 fixture\n", encoding="utf-8")
+    license_text = "Apache License 2.0 fixture\n"
+    (plugin / "LICENSE").write_text(license_text, encoding="utf-8")
+    (root / "LICENSE").write_text(license_text, encoding="utf-8")
     (root / "README.md").write_text("# Fixture\n", encoding="utf-8")
     (root / "README.zh-CN.md").write_text("# 测试插件\n", encoding="utf-8")
     docs = root / "docs"
@@ -75,6 +77,16 @@ def test_build_package_accepts_generic_text_only_plugin(tmp_path: Path) -> None:
             not name.startswith("/") and ".." not in Path(name).parts
             for name in archive.namelist()
         )
+
+
+def test_build_package_rejects_plugin_license_drift(tmp_path: Path) -> None:
+    plugin = _package_fixture(tmp_path)
+    (plugin / "LICENSE").write_text("different license text\n", encoding="utf-8")
+
+    completed = _run_packager(plugin, tmp_path, tmp_path / "dist" / "fixture-plugin.zip")
+
+    assert completed.returncode != 0
+    assert "plugin LICENSE must exactly match the repository LICENSE" in completed.stderr
 
 
 def test_build_package_rejects_workstation_path(tmp_path: Path) -> None:
