@@ -1,5 +1,7 @@
 # Detailed guide
 
+[English](GUIDE.md) | [简体中文](GUIDE.zh-CN.md)
+
 ## Contents
 
 1. Install the repository plugin
@@ -121,12 +123,12 @@ source .venv/bin/activate
 python scripts/package_face3d_plugin.py \
   --plugin plugins/face3d-modeling-toolkit \
   --repository-root . \
-  --output dist/face3d-modeling-toolkit-0.3.1.zip
+  --output dist/face3d-modeling-toolkit-0.3.2.zip
 ```
 
-The ZIP contains the plugin manifest, all skills, the repository README, and the two independent
-documentation files. It excludes caches, generated models, source evidence, and virtual
-environments.
+The ZIP contains the plugin manifest, all skills, and separate English and Simplified Chinese
+versions of the README, detailed guide, and virtual-environment guide. It excludes caches,
+generated models, source evidence, comparison images, and virtual environments.
 
 ## 6. Interpret output states
 

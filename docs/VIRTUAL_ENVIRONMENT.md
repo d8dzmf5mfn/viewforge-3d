@@ -1,5 +1,7 @@
 # Python virtual environment
 
+[English](VIRTUAL_ENVIRONMENT.md) | [简体中文](VIRTUAL_ENVIRONMENT.zh-CN.md)
+
 The geometry tools require Python 3.11. Keep the environment inside the repository as `.venv/`;
 it is ignored by Git and must not be included in plugin packages.
 

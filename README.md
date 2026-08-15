@@ -1,5 +1,7 @@
 # Face3D Modeling Toolkit
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 Face3D Modeling Toolkit is a Codex plugin and Python workspace for traceable, quality-gated
 multi-view 2D-to-3D reconstruction. It supports continuous-template fitting for faces and objects,
 bounded geometry refinement, attached-feature workflows, fixed-view QA, and appearance changes
@@ -18,6 +20,8 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 - `viewer/` — local model and annotation viewer.
 - `docs/GUIDE.md` — detailed installation and skill invocation guide.
 - `docs/VIRTUAL_ENVIRONMENT.md` — isolated Python environment setup.
+- `README.zh-CN.md`, `docs/GUIDE.zh-CN.md`, and `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — independent
+  Simplified Chinese documentation.
 
 ## Start here
 

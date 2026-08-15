@@ -95,11 +95,14 @@ def build_package(plugin: Path, repository_root: Path, output: Path) -> dict[str
 
     extras = (
         repository_root / "README.md",
+        repository_root / "README.zh-CN.md",
         repository_root / "docs" / "GUIDE.md",
+        repository_root / "docs" / "GUIDE.zh-CN.md",
         repository_root / "docs" / "VIRTUAL_ENVIRONMENT.md",
+        repository_root / "docs" / "VIRTUAL_ENVIRONMENT.zh-CN.md",
     )
     if any(not path.is_file() for path in extras):
-        raise FileNotFoundError("README.md and independent guide files are required")
+        raise FileNotFoundError("English and Simplified Chinese documentation files are required")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w") as archive:
