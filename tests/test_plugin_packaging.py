@@ -21,6 +21,7 @@ def _package_fixture(root: Path, skill_text: str = "# Generic skill\n") -> Path:
     )
     skill.write_text(skill_text, encoding="utf-8")
     (plugin / "requirements.txt").write_text("numpy>=1.26,<2\n", encoding="utf-8")
+    (root / "LICENSE").write_text("Apache License 2.0 fixture\n", encoding="utf-8")
     (root / "README.md").write_text("# Fixture\n", encoding="utf-8")
     (root / "README.zh-CN.md").write_text("# 测试插件\n", encoding="utf-8")
     docs = root / "docs"
@@ -58,10 +59,11 @@ def test_build_package_accepts_generic_text_only_plugin(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     result = json.loads(completed.stdout)
-    assert result["entries"] == 9
+    assert result["entries"] == 10
     with zipfile.ZipFile(output) as archive:
         assert archive.testzip() is None
         assert {
+            "fixture-plugin/LICENSE",
             "fixture-plugin/README.md",
             "fixture-plugin/README.zh-CN.md",
             "fixture-plugin/docs/GUIDE.md",

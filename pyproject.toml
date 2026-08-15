@@ -7,6 +7,8 @@ name = "face3d"
 version = "0.1.0"
 description = "Traceable three-view non-rigid reconstruction on a unified head template"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "fast-simplification>=0.1.9,<0.2",

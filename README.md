@@ -14,6 +14,7 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 
 - `plugins/face3d-modeling-toolkit/` — distributable Codex plugin source.
 - `.agents/plugins/marketplace.json` — repo-local Codex marketplace manifest.
+- `LICENSE` — Apache License 2.0 terms for the repository code and plugin distribution.
 - `src/face3d/` — Python geometry and validation implementation.
 - `scripts/` — deterministic builders and audit utilities.
 - `tests/` — Python tests.
@@ -56,3 +57,9 @@ npm --prefix viewer run annotate
 
 Project-specific experiment scripts and generated annotation metadata are intentionally excluded
 from the published repository.
+
+## License
+
+Repository code, documentation, and the distributable plugin are licensed under the
+[Apache License 2.0](LICENSE). Third-party reference images and trademarks retain their respective
+owners' rights and are not relicensed by this project.

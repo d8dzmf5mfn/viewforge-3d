@@ -94,6 +94,7 @@ def build_package(plugin: Path, repository_root: Path, output: Path) -> dict[str
         raise ValueError("plugin directory and manifest name must match")
 
     extras = (
+        repository_root / "LICENSE",
         repository_root / "README.md",
         repository_root / "README.zh-CN.md",
         repository_root / "docs" / "GUIDE.md",
@@ -102,7 +103,9 @@ def build_package(plugin: Path, repository_root: Path, output: Path) -> dict[str
         repository_root / "docs" / "VIRTUAL_ENVIRONMENT.zh-CN.md",
     )
     if any(not path.is_file() for path in extras):
-        raise FileNotFoundError("English and Simplified Chinese documentation files are required")
+        raise FileNotFoundError(
+            "Apache-2.0 license and English and Simplified Chinese documentation are required"
+        )
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w") as archive:

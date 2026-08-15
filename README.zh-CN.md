@@ -13,6 +13,7 @@ Face3D Modeling Toolkit 是一个 Codex 插件和 Python 工作区，用于可�
 
 - `plugins/face3d-modeling-toolkit/` — 可分发的 Codex 插件源码。
 - `.agents/plugins/marketplace.json` — 仓库本地 Codex marketplace 清单。
+- `LICENSE` — 适用于仓库代码和插件分发内容的 Apache License 2.0 条款。
 - `src/face3d/` — Python 几何和验证实现。
 - `scripts/` — 确定性构建和审计工具。
 - `tests/` — Python 测试。
@@ -52,3 +53,8 @@ npm --prefix viewer run annotate
 ```
 
 项目专用实验脚本和生成的标注元数据不会进入公开仓库内容。
+
+## 许可证
+
+仓库代码、文档和可分发插件采用 [Apache License 2.0](LICENSE)。第三方参考图片和商标仍归
+各自权利人所有，本项目许可证不会对它们重新授权。
