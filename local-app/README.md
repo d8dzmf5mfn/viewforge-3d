@@ -17,6 +17,14 @@ biological skeleton, and animation MCP tools.
 The server accepts only files inside the workspace selected in the app. Tool results use opaque
 asset, job, and artifact IDs; absolute local paths stay in the local state store and logs.
 
+## Install and connect
+
+- [ViewForge Local 安装、Tunnel 与 API Key 指南](USER_SETUP.zh-CN.md)
+- [OpenAI Secure MCP Tunnel documentation](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)
+- [OpenAI Platform Tunnel settings](https://platform.openai.com/settings/organization/tunnels)
+- [OpenAI Platform Runtime API keys](https://platform.openai.com/settings/organization/api-keys)
+- [`tunnel-client` latest release](https://github.com/openai/tunnel-client/releases/latest)
+
 ## Build
 
 ```bash

@@ -20,6 +20,7 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 - `scripts/` — deterministic builders and audit utilities.
 - `tests/` — Python tests.
 - `viewer/` — local model and annotation viewer.
+- `local-app/` — private macOS MCP host and its build/connect guide.
 - `docs/GUIDE.md` — detailed installation and skill invocation guide.
 - `docs/VIRTUAL_ENVIRONMENT.md` — isolated Python environment setup.
 - `README.zh-CN.md`, `docs/GUIDE.zh-CN.md`, and `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — independent
@@ -29,7 +30,9 @@ or rejected visual candidate does not silently fall back to a plausible primitiv
 
 1. Follow [the virtual environment guide](docs/VIRTUAL_ENVIRONMENT.md).
 2. Install the plugin and invoke its skills with [the detailed guide](docs/GUIDE.md).
-3. Use the router when the correct geometry workflow is unclear:
+3. To connect the local geometry runtime to ChatGPT Developer Mode, follow the
+   [ViewForge Local installation, Tunnel, and API key guide](local-app/USER_SETUP.zh-CN.md).
+4. Use the router when the correct geometry workflow is unclear:
 
 ```text
 $viewforge-3d-toolkit:viewforge-3d-router

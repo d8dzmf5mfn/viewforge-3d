@@ -8,6 +8,7 @@
 
 - [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)
 - [OpenAI Platform Tunnel 设置](https://platform.openai.com/settings/organization/tunnels)
+- [OpenAI Platform Runtime API Keys](https://platform.openai.com/settings/organization/api-keys)
 - [ChatGPT 插件设置](https://chatgpt.com/#settings/Connectors)
 - [tunnel-client 最新版本](https://github.com/openai/tunnel-client/releases/latest)
 
@@ -139,7 +140,7 @@ ViewForge Local 暴露两类彼此独立的引擎，不会把所有建模任务�
 
 ## 4. 安装 tunnel-client
 
-不要在指南中固定某个旧版本。始终从 [最新 Release](https://github.com/openai/tunnel-client/releases/latest) 下载。
+优先打开 [OpenAI Platform Tunnel 设置](https://platform.openai.com/settings/organization/tunnels)，使用页面提供的下载入口；也可以从 [`tunnel-client` 最新 Release](https://github.com/openai/tunnel-client/releases/latest) 下载。不要在指南或脚本中固定某个旧版本 URL。
 
 先确认 Mac 架构：
 
@@ -194,9 +195,11 @@ tunnel-client help quickstart
 
 ### 5.2 创建单独的运行密钥
 
-在对应 Platform 组织或项目中创建一个专门供 `tunnel-client` 使用的 API Key。该密钥对应的主体需要 `Tunnels Read + Use`。
+打开 [OpenAI Platform Runtime API Keys](https://platform.openai.com/settings/organization/api-keys)，在 Tunnel 所属组织中创建一个专门供 `tunnel-client` 使用的 Runtime API Key。该密钥对应的主体需要 `Tunnels Read + Use`。
 
 这里需要 API Key，是因为 `tunnel-client` 必须向 OpenAI Tunnel 控制平面证明它有权使用该 Tunnel。ViewForge 本地 MCP 不会使用这个密钥调用模型。不要使用 Admin API Key，也不要与其他应用共用长期密钥。
+
+OpenAI 官方示例通常把这个值命名为 `CONTROL_PLANE_API_KEY`。ViewForge Local 为兼容 App 的本地读取流程，将同一个 Runtime API Key 保存为 `OPENAI_API_KEY`，并在 Profile 中通过 `--control-plane-api-key-ref env:OPENAI_API_KEY` 显式引用。不要在两个变量中重复保存同一密钥。
 
 ### 5.3 保存到本地工作区
 
