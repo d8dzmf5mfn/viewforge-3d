@@ -1,7 +1,8 @@
 # ViewForge Local
 
-Private macOS host for ViewForge multiview reconstruction, geometry generation, Blender modeling,
-biological skeleton, and animation MCP tools.
+Private macOS host for ViewForge multiview reconstruction, geometry generation, Blender modeling
+and rendering, biological skeleton, and animation MCP tools.
+The UI follows the system language by default and also offers explicit Chinese and English modes.
 
 ## Shape
 
@@ -10,12 +11,13 @@ biological skeleton, and animation MCP tools.
 - MCP transport: streamable HTTP at `http://127.0.0.1:8765/mcp`
 - Worker: bundled Python 3.11 runtime plus the complete lockfile-pinned ViewForge geometry stack
 - Geometry engines: bundled NumPy/OpenCV/MediaPipe/Trimesh/Open3D pipeline and installed Blender
-- Blender policy: background jobs disable auto-execution and accept declarative model JSON rather
-  than arbitrary Python
+- Blender policy: background jobs disable auto-execution and accept declarative model JSON or
+  fixed render options rather than arbitrary Python
 - Storage: `~/Library/Application Support/ViewForge Local`
 
-The server accepts only files inside the workspace selected in the app. Tool results use opaque
-asset, job, and artifact IDs; absolute local paths stay in the local state store and logs.
+The server accepts only files inside the workspace selected in the app. Tool results normally use
+opaque asset, job, and artifact IDs; `read_image_artifact` can return one explicitly selected
+rendered image to the conversation. Absolute local paths stay in the local state store and logs.
 
 ## Install and connect
 

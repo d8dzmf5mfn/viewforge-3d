@@ -1,0 +1,4 @@
+interface:
+  display_name: "Render Model Preview"
+  short_description: "Render fixed-view previews from Blend or GLB"
+  default_prompt: "Use $viewforge-3d-toolkit:render-model-preview to render reviewable fixed-view previews of this registered Blend or GLB model."

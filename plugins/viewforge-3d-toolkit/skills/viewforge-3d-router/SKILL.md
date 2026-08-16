@@ -1,6 +1,6 @@
 ---
 name: viewforge-3d-router
-description: "Route ViewForge 3D tasks to the correct reconstruction, biological skeleton construction or animation, landmark refinement, annotation lowering, smoothing, Blender polishing, or same-geometry appearance skill. Use when the user asks how to call the plugin, which ViewForge 3D skill to use, or requests an end-to-end workflow spanning geometry, bone-only Armature, no-skin rigid binding, animation, or appearance stages for a person, animal, character, product, or object."
+description: "Route ViewForge 3D tasks to the correct reconstruction, rendering, biological skeleton construction or animation, landmark refinement, annotation lowering, smoothing, Blender polishing, or same-geometry appearance skill. Use when the user asks how to call the plugin, which ViewForge 3D skill to use, or requests an end-to-end workflow spanning geometry, visual preview, bone-only Armature, no-skin rigid binding, animation, or appearance stages for a person, animal, character, product, or object."
 ---
 
 # ViewForge 3D router
@@ -13,6 +13,8 @@ user acceptance separate.
 Use the fully qualified name when calling a skill from this plugin:
 
 - `$viewforge-3d-toolkit:reconstruct-3d-from-multiview` — reconstruct or audit source lineage.
+- `$viewforge-3d-toolkit:render-model-preview` — render immutable fixed-view PNG previews from an
+  existing Blend or GLB and return a selected image to the conversation.
 - `$viewforge-3d-toolkit:build-biological-skeleton` — derive and validate a bone-only Armature for
   a person, humanoid, quadruped, or other biological model.
 - `$viewforge-3d-toolkit:animate-biological-skeleton` — derive a rotation-only Action from
@@ -46,6 +48,8 @@ unclear or the request spans multiple branches.
 5. Add smoothing or manual polishing only when explicitly authorized. Do not infer permission from
    a request for better quality.
 6. Apply skin or material only after the geometry stage is accepted for that iteration.
+7. Use render-model-preview whenever an existing artifact needs visual review. A render does not
+   promote `preview` or `automated-gates-passed` to `user-accepted`.
 
 If the user explicitly requests an unskinned model, stop after geometry QA and fixed-view review.
 Neutral color factors may aid inspection, but do not bake image textures or invoke the skin skill.
@@ -66,6 +70,7 @@ immutable source
   -> classified feature refinement
   -> optional authorized polish/smooth
   -> geometry QA and user review
+  -> fixed-view render preview when requested
   -> biological Armature when requested
   -> pose evidence and bone-only Action when requested
   -> optional rigid segmented binding without skin

@@ -33,7 +33,20 @@ BLENDER_JOB_KINDS = {
     JobKind.CREATE_BONE_ANIMATION,
     JobKind.BIND_RIGID_COMPONENTS,
     JobKind.BUILD_DECLARATIVE_MODEL,
+    JobKind.RENDER_MODEL_PREVIEW,
 }
+RENDER_VIEWS = {
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top",
+    "bottom",
+}
+DEFAULT_RENDER_VIEWS = ["perspective", "front", "right", "back", "left"]
+RENDER_MATERIAL_MODES = {"original", "neutral"}
+RENDER_BACKGROUNDS = {"studio_dark", "studio_light", "transparent"}
 
 
 def load_workspace_modeling_config(
@@ -325,6 +338,44 @@ class JobLauncher:
             runtime="blender",
             staged_inputs=staged,
             inline_json_inputs=inline,
+        )
+
+    def render_model_preview(
+        self,
+        *,
+        source_id: str,
+        views: list[str] | None,
+        resolution: int,
+        material_mode: str,
+        background: str,
+    ) -> JobSummary:
+        source = self.references.resolve(source_id, {".blend", ".glb"})
+        selected_views = list(views) if views is not None else list(DEFAULT_RENDER_VIEWS)
+        if not 1 <= len(selected_views) <= len(RENDER_VIEWS):
+            raise ValueError("views must contain between one and seven values.")
+        if len(set(selected_views)) != len(selected_views):
+            raise ValueError("views must not contain duplicates.")
+        unknown_views = sorted(set(selected_views) - RENDER_VIEWS)
+        if unknown_views:
+            raise ValueError(f"Unsupported render views: {unknown_views}")
+        if isinstance(resolution, bool) or not 256 <= resolution <= 1024:
+            raise ValueError("resolution must be between 256 and 1024.")
+        if material_mode not in RENDER_MATERIAL_MODES:
+            raise ValueError("material_mode must be original or neutral.")
+        if background not in RENDER_BACKGROUNDS:
+            raise ValueError(
+                "background must be studio_dark, studio_light, or transparent."
+            )
+        return self._create(
+            JobKind.RENDER_MODEL_PREVIEW,
+            {
+                "views": selected_views,
+                "resolution": int(resolution),
+                "material_mode": material_mode,
+                "background": background,
+            },
+            runtime="blender",
+            staged_inputs={"input": (source, f"source{source.suffix.lower()}")},
         )
 
     def generate_pixel_cube(self, side_cm: float, cells_per_edge: int) -> JobSummary:
@@ -623,6 +674,37 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--qa",
             str(output_dir / "modeling-qa.json"),
         ]
+    if request.kind == JobKind.RENDER_MODEL_PREVIEW.value:
+        script = _script(plugin_root, "runtime/blender/render_model_preview.py")
+        command = [
+            str(blender),
+            "--background",
+            "--disable-autoexec",
+        ]
+        if Path(request.arguments["input"]).suffix.lower() == ".blend":
+            command.append(request.arguments["input"])
+        else:
+            command.append("--factory-startup")
+        command.extend(
+            [
+                "--python",
+                str(script),
+                "--",
+                "--input",
+                request.arguments["input"],
+                "--output-dir",
+                str(output_dir / "renders"),
+                "--views",
+                ",".join(request.arguments["views"]),
+                "--resolution",
+                str(request.arguments["resolution"]),
+                "--material-mode",
+                request.arguments["material_mode"],
+                "--background",
+                request.arguments["background"],
+            ]
+        )
+        return command
     raise ValueError("Unsupported Blender job kind.")
 
 
@@ -788,6 +870,19 @@ def run_job(request_path: Path, paths: LocalPaths | None = None) -> int:
             job.exit_code = exit_code
             if exit_code != 0:
                 raise RuntimeError(f"Blender worker exited with code {exit_code}.")
+            if request.kind == JobKind.RENDER_MODEL_PREVIEW.value:
+                from .rendering import compose_preview_sheet
+
+                render_dir = output_dir / "renders"
+                sheet = compose_preview_sheet(
+                    render_dir,
+                    list(request.arguments["views"]),
+                    output_dir / "render-preview-sheet.png",
+                )
+                manifest_path = render_dir / "render-manifest.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest["render"]["contactSheet"] = sheet
+                atomic_write_json(manifest_path, manifest)
         else:
             with log_path.open("w", encoding="utf-8") as log:
                 log.write(f"ViewForge modeling job {request.kind}\n")

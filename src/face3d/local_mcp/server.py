@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import contextlib
 from pathlib import Path
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
-from mcp.types import ToolAnnotations
+from mcp.types import CallToolResult, ImageContent, TextContent, ToolAnnotations
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -22,6 +23,9 @@ from .models import (
     LocalStatus,
     ModelingAssetState,
     ModelingProfileStatus,
+    RenderBackground,
+    RenderMaterialMode,
+    RenderView,
     SkeletonProfile,
 )
 from .storage import (
@@ -51,6 +55,13 @@ LOCAL_IDEMPOTENT_WRITE = ToolAnnotations(
     idempotentHint=True,
     openWorldHint=False,
 )
+IMAGE_ARTIFACT_MIME_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
+MAX_IMAGE_ARTIFACT_BYTES = 10 * 1024 * 1024
 
 
 class Runtime:
@@ -97,6 +108,7 @@ class Runtime:
             capabilities.extend(
                 [
                     "declarative_blender_modeling",
+                    "model_rendering",
                     "biological_skeleton",
                     "bone_animation",
                     "rigid_binding",
@@ -138,6 +150,31 @@ class Runtime:
         return JSONArtifact(
             artifact=artifact,
             document=_sanitize_document(payload, [root for root in roots if root is not None]),
+        )
+
+    def resolve_image_artifact(self, artifact_id: str) -> CallToolResult:
+        artifact = self.artifacts.get(artifact_id)
+        path = self.artifacts.resolve(artifact_id)
+        mime_type = IMAGE_ARTIFACT_MIME_TYPES.get(path.suffix.lower())
+        if mime_type is None:
+            raise ValueError("Only PNG, JPEG, or WebP artifacts can be returned as images.")
+        if path.stat().st_size > MAX_IMAGE_ARTIFACT_BYTES:
+            raise ValueError("The image artifact exceeds the local read limit.")
+        return CallToolResult(
+            content=[
+                TextContent(
+                    type="text",
+                    text=(
+                        f"{artifact.name} · {artifact.size_bytes} bytes · "
+                        f"sha256:{artifact.sha256}"
+                    ),
+                ),
+                ImageContent(
+                    type="image",
+                    data=base64.b64encode(path.read_bytes()).decode("ascii"),
+                    mime_type=mime_type,
+                ),
+            ]
         )
 
     def inspect_modeling_profile(self, config_asset_id: str) -> ModelingProfileStatus:
@@ -193,8 +230,8 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         name="viewforge-local",
         title="ViewForge Local",
         description=(
-            "Local-only multiview reconstruction, declarative modeling, biological skeleton, "
-            "animation, and rigid-binding tools."
+            "Local-only multiview reconstruction, declarative modeling, model rendering, "
+            "biological skeleton, animation, and rigid-binding tools."
         ),
         version=SERVER_VERSION,
         instructions=(
@@ -202,7 +239,8 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
             "Geometry actions create immutable job outputs and never mutate the source asset. "
             "Arbitrary Python and Blender script execution is intentionally unavailable. "
             "Call get_viewforge_job until a queued or running job reaches succeeded, failed, or "
-            "review_required."
+            "review_required. After a render job succeeds, call read_image_artifact with the "
+            "render-preview-sheet.png artifact ID to inspect the result."
         ),
     )
 
@@ -361,6 +399,33 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
                 if spec is not None
                 else None
             ),
+        )
+
+    @server.tool(
+        name="render_model_preview",
+        title="Render model preview",
+        description=(
+            "Use this to render immutable fixed-view PNG previews from a registered or generated "
+            "Blend or GLB. It uses only the plugin-owned Blender renderer, disables embedded "
+            "auto-execution, never overwrites the source, and emits individual views, a contact "
+            "sheet, and a render manifest. Omit views for perspective/front/right/back/left."
+        ),
+        annotations=LOCAL_WRITE,
+        structured_output=True,
+    )
+    def render_model_preview(
+        source_id: str,
+        views: list[RenderView] | None = None,
+        resolution: int = 768,
+        material_mode: RenderMaterialMode = "original",
+        background: RenderBackground = "studio_dark",
+    ) -> JobSummary:
+        return local.launcher.render_model_preview(
+            source_id=source_id,
+            views=views,
+            resolution=resolution,
+            material_mode=material_mode,
+            background=background,
         )
 
     @server.tool(
@@ -534,6 +599,19 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     )
     def read_json_artifact(artifact_id: str) -> JSONArtifact:
         return local.resolve_json_artifact(artifact_id)
+
+    @server.tool(
+        name="read_image_artifact",
+        title="Read rendered image",
+        description=(
+            "Use this only for a selected PNG, JPEG, or WebP artifact after a render or QA job. "
+            "It returns that local image to the conversation without exposing its filesystem path."
+        ),
+        annotations=READ_ONLY,
+        structured_output=False,
+    )
+    def read_image_artifact(artifact_id: str) -> CallToolResult:
+        return local.resolve_image_artifact(artifact_id)
 
     return server
 

@@ -24,6 +24,7 @@ class JobKind(StrEnum):
     CREATE_BONE_ANIMATION = "create_bone_animation"
     BIND_RIGID_COMPONENTS = "bind_rigid_components"
     BUILD_DECLARATIVE_MODEL = "build_declarative_model"
+    RENDER_MODEL_PREVIEW = "render_model_preview"
     GENERATE_PIXEL_CUBE = "generate_pixel_cube"
     RECONSTRUCT_SIX_VIEW_VISUAL_HULL = "reconstruct_six_view_visual_hull"
     VALIDATE_FACE_MULTIVIEW = "validate_face_multiview"
@@ -176,3 +177,14 @@ class DeclarativeModelSpec(PublicModel):
 
 
 SkeletonProfile = Literal["humanoid-v1", "quadruped-v1"]
+RenderView = Literal[
+    "perspective",
+    "front",
+    "back",
+    "left",
+    "right",
+    "top",
+    "bottom",
+]
+RenderMaterialMode = Literal["original", "neutral"]
+RenderBackground = Literal["studio_dark", "studio_light", "transparent"]

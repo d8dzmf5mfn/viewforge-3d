@@ -51,6 +51,8 @@ Call a specialist directly when the stage is already known:
 ```text
 Use $viewforge-3d-toolkit:reconstruct-3d-from-multiview to build an unskinned object preview from these images.
 
+Use $viewforge-3d-toolkit:render-model-preview to render fixed-view PNG previews of this registered Blend or GLB and return the contact sheet to the conversation.
+
 Use $viewforge-3d-toolkit:build-biological-skeleton to build a bone-only Armature for this person or animal without adding weights.
 
 Use $viewforge-3d-toolkit:animate-biological-skeleton to animate this accepted Armature from skeleton-overlaid key poses and rigid-bind segmented body parts without skin weights.

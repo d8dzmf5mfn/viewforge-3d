@@ -9,6 +9,7 @@ validating 3D models from supplied visual evidence. It does not just return plau
 the workflow records its source, checks the result, and fails closed when the geometry cannot be
 justified.
 
+[Latest release](https://github.com/d8dzmf5mfn/viewforge-3d/releases/latest) ·
 [Install and use](docs/GUIDE.md) · [Python environment](docs/VIRTUAL_ENVIRONMENT.md) ·
 [ViewForge Local, Tunnel, and API key](local-app/USER_SETUP.zh-CN.md)
 
@@ -36,6 +37,7 @@ remain the property of their respective owners.*
 | --- | --- |
 | Multi-view reconstruction | Continuous-template fitting for supported people, stylized characters, and products; six-view visual-hull reconstruction for aligned object silhouettes. |
 | Declarative Blender modeling | Reproducible, component-based Blender scenes and exports from structured model declarations. |
+| Model rendering | Fixed-view PNG previews and a contact sheet from an existing Blend or GLB, returned directly to the conversation for review. |
 | Bounded geometry refinement | Landmark fitting, annotation-guided lowering, topology-preserving smoothing, attached features, and guided manual polish. |
 | Skeletons and animation | Auditable biological Armatures, rotation-only bone animation, and rigid Bone Parent motion for segmented models without skin weights. |
 | Appearance-only changes | Update materials or skin while preserving accepted geometry and UVs. |

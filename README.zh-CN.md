@@ -8,6 +8,7 @@ ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据给定的�
 驱动并验证三维模型。它不只是返回一个看起来合理的几何体：工作流会记录来源、检查结果，并在
 几何无法被证据支持时失败关闭。
 
+[最新 Release](https://github.com/d8dzmf5mfn/viewforge-3d/releases/latest) ·
 [安装与使用](docs/GUIDE.zh-CN.md) · [Python 环境](docs/VIRTUAL_ENVIRONMENT.zh-CN.md) ·
 [ViewForge Local、Tunnel 与 API Key](local-app/USER_SETUP.zh-CN.md)
 
@@ -31,6 +32,7 @@ Apple 图像与商标权利归其各自权利人所有。*
 | --- | --- |
 | 多视图重建 | 为受支持的人物、风格化角色和产品提供连续模板拟合；为已对齐的物体轮廓提供六视图 visual-hull 重建。 |
 | 声明式 Blender 建模 | 根据结构化模型声明，可重复地构建组件化 Blender 场景并导出模型。 |
+| 模型渲染 | 从已有 Blend 或 GLB 生成固定视角 PNG 与预览接触表，并把选定图片直接返回对话进行审阅。 |
 | 有边界的几何精修 | 关键点拟合、标注区域压低、保持拓扑的平滑、附着特征和受控手工精修。 |
 | 骨架与动画 | 可审计的生物 Armature、只记录旋转的骨骼动画，以及分段模型在无 skin 权重条件下的刚性 Bone Parent 运动。 |
 | 只修改外观 | 在保持已验收几何与 UV 不变的条件下修改材质或皮肤。 |

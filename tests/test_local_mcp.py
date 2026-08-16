@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import base64
 import json
 import sys
 from pathlib import Path
 
 import anyio
 import pytest
+from mcp.types import ImageContent
+from PIL import Image
 
 from face3d.local_mcp.jobs import JobRequest, blender_command, load_request, run_job
 from face3d.local_mcp.models import AssetKind, JobKind, JobState
+from face3d.local_mcp.rendering import compose_preview_sheet
 from face3d.local_mcp.server import Runtime, create_server
 from face3d.local_mcp.storage import (
     ArtifactStore,
@@ -140,6 +144,7 @@ def test_mcp_tool_contract_has_focused_annotated_tools(tmp_path: Path) -> None:
         "bind_rigid_components",
         "inspect_modeling_profile",
         "build_declarative_blender_model",
+        "render_model_preview",
         "generate_pixel_cube",
         "reconstruct_six_view_visual_hull",
         "validate_face_multiview",
@@ -150,12 +155,15 @@ def test_mcp_tool_contract_has_focused_annotated_tools(tmp_path: Path) -> None:
         "list_viewforge_jobs",
         "list_job_artifacts",
         "read_json_artifact",
+        "read_image_artifact",
     }
     assert all(tool.annotations is not None for tool in tools)
     by_name = {tool.name: tool for tool in tools}
     assert by_name["viewforge_status"].annotations.read_only_hint is True
     assert by_name["inspect_modeling_profile"].annotations.read_only_hint is True
     assert by_name["build_biological_skeleton"].annotations.read_only_hint is False
+    assert by_name["render_model_preview"].annotations.read_only_hint is False
+    assert by_name["read_image_artifact"].annotations.read_only_hint is True
     assert by_name["generate_pixel_cube"].annotations.open_world_hint is False
     assert by_name["build_biological_skeleton"].annotations.open_world_hint is False
     schema = by_name["build_declarative_blender_model"].input_schema
@@ -169,6 +177,9 @@ def test_mcp_tool_contract_has_focused_annotated_tools(tmp_path: Path) -> None:
         "torus",
         "mesh",
     ]
+    render_schema = by_name["render_model_preview"].input_schema
+    assert render_schema["required"] == ["source_id"]
+    assert render_schema["properties"]["resolution"]["default"] == 768
 
 
 def test_blender_commands_disable_embedded_autoexec(tmp_path: Path) -> None:
@@ -214,6 +225,52 @@ def test_declarative_blender_command_uses_plugin_owned_script(tmp_path: Path) ->
     assert script.name == "build_declarative_model.py"
 
 
+def test_render_blender_command_uses_plugin_owned_script_and_safe_loading(
+    tmp_path: Path,
+) -> None:
+    plugin_root = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-toolkit"
+    arguments = {
+        "input": str(tmp_path / "source.glb"),
+        "views": ["perspective", "front"],
+        "resolution": 512,
+        "material_mode": "original",
+        "background": "studio_dark",
+    }
+    glb_request = JobRequest(
+        schema_version=2,
+        job_id="job_render_glb",
+        kind=JobKind.RENDER_MODEL_PREVIEW.value,
+        blender_executable=sys.executable,
+        plugin_root=str(plugin_root),
+        arguments=arguments,
+    )
+
+    glb_command = blender_command(glb_request, tmp_path / "glb-output")
+
+    assert "--background" in glb_command
+    assert "--disable-autoexec" in glb_command
+    assert "--factory-startup" in glb_command
+    assert glb_command.count("--python") == 1
+    script = Path(glb_command[glb_command.index("--python") + 1]).resolve()
+    assert script.is_relative_to(plugin_root.resolve())
+    assert script.name == "render_model_preview.py"
+
+    blend_arguments = {**arguments, "input": str(tmp_path / "source.blend")}
+    blend_request = JobRequest(
+        schema_version=2,
+        job_id="job_render_blend",
+        kind=JobKind.RENDER_MODEL_PREVIEW.value,
+        blender_executable=sys.executable,
+        plugin_root=str(plugin_root),
+        arguments=blend_arguments,
+    )
+
+    blend_command = blender_command(blend_request, tmp_path / "blend-output")
+
+    assert "--factory-startup" not in blend_command
+    assert blend_command.index(blend_arguments["input"]) < blend_command.index("--python")
+
+
 def test_inline_declarative_spec_is_staged_as_immutable_job_input(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -239,6 +296,88 @@ def test_inline_declarative_spec_is_staged_as_immutable_job_input(
     staged = Path(request.arguments["spec"])
     assert staged.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
     assert json.loads(staged.read_text(encoding="utf-8"))["objects"][0]["name"] == "Seat"
+
+
+def test_render_preview_stages_source_and_validates_options(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, workspace = configured_runtime(tmp_path)
+    source = workspace / "model.glb"
+    source.write_bytes(b"glTF render fixture")
+    asset = runtime.assets.register(source.name)
+    monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))
+
+    class FakeWorker:
+        pid = 4322
+
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.subprocess.Popen",
+        lambda *args, **kwargs: FakeWorker(),
+    )
+    summary = runtime.launcher.render_model_preview(
+        source_id=asset.id,
+        views=["perspective", "front"],
+        resolution=512,
+        material_mode="neutral",
+        background="transparent",
+    )
+
+    request = load_request(Path(runtime.jobs.load(summary.id).request_path))
+    staged = Path(request.arguments["input"])
+    assert staged.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
+    assert staged.read_bytes() == source.read_bytes()
+    assert request.arguments["views"] == ["perspective", "front"]
+    assert request.arguments["resolution"] == 512
+    with pytest.raises(ValueError, match="duplicates"):
+        runtime.launcher.render_model_preview(
+            source_id=asset.id,
+            views=["front", "front"],
+            resolution=512,
+            material_mode="original",
+            background="studio_dark",
+        )
+
+
+def test_render_contact_sheet_and_image_artifact_roundtrip(tmp_path: Path) -> None:
+    runtime, _ = configured_runtime(tmp_path)
+    job_id = "job_render_fixture"
+    output = runtime.paths.jobs / job_id / "output"
+    render_dir = output / "renders"
+    render_dir.mkdir(parents=True)
+    views = ["perspective", "front", "right"]
+    for index, view in enumerate(views):
+        Image.new(
+            "RGB",
+            (320, 320),
+            (40 + index * 40, 80 + index * 20, 120),
+        ).save(render_dir / f"render-{view}.png")
+    sheet_path = output / "render-preview-sheet.png"
+
+    sheet = compose_preview_sheet(render_dir, views, sheet_path)
+    artifact = ArtifactStore(runtime.paths).register(job_id, sheet_path)
+    result = runtime.resolve_image_artifact(artifact.id)
+
+    assert sheet["views"] == views
+    assert sheet["width"] == 960
+    assert sheet_path.is_file()
+    assert len(result.content) == 2
+    assert isinstance(result.content[1], ImageContent)
+    assert base64.b64decode(result.content[1].data) == sheet_path.read_bytes()
+    assert str(runtime.paths.root) not in result.model_dump_json()
+
+
+def test_read_image_artifact_rejects_non_image(tmp_path: Path) -> None:
+    runtime, _ = configured_runtime(tmp_path)
+    job_id = "job_json_fixture"
+    output = runtime.paths.jobs / job_id / "output"
+    output.mkdir(parents=True)
+    document = output / "qa.json"
+    document.write_text("{}", encoding="utf-8")
+    artifact = ArtifactStore(runtime.paths).register(job_id, document)
+
+    with pytest.raises(ValueError, match="Only PNG"):
+        runtime.resolve_image_artifact(artifact.id)
 
 
 def test_non_blender_pixel_cube_job_runs_in_modeling_runtime(tmp_path: Path) -> None:

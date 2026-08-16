@@ -81,13 +81,17 @@ private final class AppController: ObservableObject {
         serverLog = nil
     }
 
-    func chooseWorkspace() {
+    func chooseWorkspace(language: AppLanguage) {
+        let localizer = AppLocalizer(language: language)
         let panel = NSOpenPanel()
-        panel.title = "选择 ViewForge 本地工作区"
+        panel.title = localizer.text(
+            "选择 ViewForge 本地工作区",
+            "Choose the ViewForge local workspace"
+        )
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.prompt = "选择"
+        panel.prompt = localizer.text("选择", "Choose")
         guard panel.runModal() == .OK, let selected = panel.url else { return }
         var configuration = loadConfiguration()
         configuration.workspaceRoot = selected.resolvingSymlinksInPath().path
@@ -443,54 +447,86 @@ private struct StatusRow: View {
 
 private struct ContentView: View {
     @EnvironmentObject private var controller: AppController
+    @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
+
+    private var language: AppLanguage {
+        AppLanguage(rawValue: languageID) ?? .system
+    }
+
+    private var localizer: AppLocalizer {
+        AppLocalizer(language: language)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("ViewForge Local")
-                    .font(.system(size: 28, weight: .semibold))
-                Text("本机多视图建模、Blender、骨骼与动画 MCP")
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("ViewForge Local")
+                        .font(.system(size: 28, weight: .semibold))
+                    Text(localizer.text(
+                        "本机多视图建模、Blender 渲染、骨骼与动画 MCP",
+                        "Local multiview modeling, Blender rendering, rigging, and animation MCP"
+                    ))
                     .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker(localizer.text("语言", "Language"), selection: $languageID) {
+                    ForEach(AppLanguage.allCases) { option in
+                        Text(localizer.languageName(option)).tag(option.rawValue)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 220)
+                .accessibilityLabel(localizer.text("语言", "Language"))
             }
 
-            GroupBox("本机运行时") {
+            GroupBox(localizer.text("本机运行时", "Local runtime")) {
                 VStack(alignment: .leading, spacing: 13) {
                     StatusRow(
-                        title: "工作区",
-                        value: controller.workspace,
+                        title: localizer.text("工作区", "Workspace"),
+                        value: localizer.runtimeValue(controller.workspace),
                         ready: controller.workspace != "未选择"
                     )
                     StatusRow(
                         title: "Blender",
-                        value: controller.blenderStatus,
+                        value: localizer.runtimeValue(controller.blenderStatus),
                         ready: controller.blenderStatus != "未找到 Blender"
                     )
                     StatusRow(
-                        title: "几何运行时",
-                        value: controller.modelingStatus,
+                        title: localizer.text("几何运行时", "Geometry runtime"),
+                        value: localizer.runtimeValue(controller.modelingStatus),
                         ready: controller.modelingStatus == "完整几何运行时可用"
                     )
                     StatusRow(
                         title: "MCP",
-                        value: controller.mcpStatus,
+                        value: localizer.runtimeValue(controller.mcpStatus),
                         ready: controller.mcpStatus.hasPrefix("就绪")
                     )
                     HStack {
-                        Button("选择工作区") { controller.chooseWorkspace() }
-                        Button("重新检测 Blender") { controller.detectBlender() }
-                        Button("复制 MCP URL") { controller.copyMCPURL() }
-                        Button("打开本地记录") { controller.openSupportDirectory() }
+                        Button(localizer.text("选择工作区", "Choose workspace")) {
+                            controller.chooseWorkspace(language: language)
+                        }
+                        Button(localizer.text("重新检测 Blender", "Detect Blender")) {
+                            controller.detectBlender()
+                        }
+                        Button(localizer.text("复制 MCP URL", "Copy MCP URL")) {
+                            controller.copyMCPURL()
+                        }
+                        Button(localizer.text("打开本地记录", "Open local records")) {
+                            controller.openSupportDirectory()
+                        }
                     }
                 }
                 .padding(8)
             }
 
-            GroupBox("ChatGPT 私有连接") {
+            GroupBox(localizer.text("ChatGPT 私有连接", "Private ChatGPT connection")) {
                 VStack(alignment: .leading, spacing: 12) {
                     StatusRow(
-                        title: "安全隧道",
-                        value: controller.tunnelStatus,
+                        title: localizer.text("安全隧道", "Secure tunnel"),
+                        value: localizer.runtimeValue(controller.tunnelStatus),
                         ready: controller.tunnelStatus == "运行中"
                     )
                     HStack {
@@ -498,13 +534,22 @@ private struct ContentView: View {
                         TextField("viewforge-local", text: $controller.profile)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 240)
-                        Button(controller.tunnelStatus == "运行中" ? "停止" : "启动") {
+                        Button(controller.tunnelStatus == "运行中"
+                            ? localizer.text("停止", "Stop")
+                            : localizer.text("启动", "Start")) {
                             controller.toggleTunnel()
                         }
-                        Button("复制运行命令") { controller.copyTunnelRunCommand() }
-                        Button("设置指南") { controller.openTunnelGuide() }
+                        Button(localizer.text("复制运行命令", "Copy run command")) {
+                            controller.copyTunnelRunCommand()
+                        }
+                        Button(localizer.text("设置指南", "Setup guide")) {
+                            controller.openTunnelGuide()
+                        }
                     }
-                    Text("先在 OpenAI Platform 创建 tunnel，并让其转发到 127.0.0.1:8765/mcp。")
+                    Text(localizer.text(
+                        "先在 OpenAI Platform 创建 tunnel，并让其转发到 127.0.0.1:8765/mcp。",
+                        "Create a tunnel in OpenAI Platform and forward it to 127.0.0.1:8765/mcp."
+                    ))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -512,18 +557,22 @@ private struct ContentView: View {
             }
 
             if let error = controller.lastError {
-                Text(error)
+                Text(localizer.runtimeValue(error))
                     .foregroundStyle(.red)
                     .font(.callout)
             }
 
             Spacer()
-            Text("所有生成结果保存在本机；MCP 只返回资产、任务和产物 ID。")
+            Text(localizer.text(
+                "结果保存在本机；MCP 默认返回 ID，仅在显式读取时返回选定渲染图。",
+                "Results stay local; MCP returns IDs by default and images only when explicitly read."
+            ))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
         .padding(28)
         .frame(minWidth: 760, minHeight: 540)
+        .environment(\.locale, language.locale)
         .onReceive(timer) { _ in controller.refreshHealth() }
     }
 }
