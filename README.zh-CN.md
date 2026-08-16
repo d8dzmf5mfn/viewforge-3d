@@ -2,14 +2,77 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据多视图二维证据，以可追踪、带质量
-门槛的方式构建三维模型。它适用于人物、风格化角色、产品和普通物体，支持连续模板拟合、局部
-几何精修、附着特征工作流、固定视角质量检查，以及不移动已验收几何的外观修改。
-现在也支持为人物、人形角色和动物建立、驱动可审计的纯骨架 Armature，并为分段模型提供不使用
-权重的刚性 Bone Parent 绑定。
+> **将多视图二维证据转化为可追踪、带质量门槛的三维模型。**
 
-工具包采用失败关闭策略：如果生产模板缺失、证据不足、拓扑损坏或视觉候选被拒绝，不会静默
-退回到看似合理的基础体或体素外壳。
+ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据给定的视觉证据重建、精修、绑定、
+驱动并验证三维模型。它不只是返回一个看起来合理的几何体：工作流会记录来源、检查结果，并在
+几何无法被证据支持时失败关闭。
+
+[安装与使用](docs/GUIDE.zh-CN.md) · [Python 环境](docs/VIRTUAL_ENVIRONMENT.zh-CN.md) ·
+[ViewForge Local、Tunnel 与 API Key](local-app/USER_SETUP.zh-CN.md)
+
+![iPhone 17 官方二维证据与 ViewForge 几何预览对比](docs/assets/iphone17-evidence-vs-geometry-preview.png)
+
+*演示 — 左侧为 iPhone 17 官方二维参考证据，右侧为项目自建 `TemplatePhoneV0` 几何预览。
+该图展示证据与预览之间的可追踪关系，不代表已经用户验收的重建结果，也不是权威 CAD 模型。
+Apple 图像与商标权利归其各自权利人所有。*
+
+## 为什么使用 ViewForge？
+
+- **证据驱动** — 针对给定的多视图参考进行重建，不导入第三方成品三维模型。
+- **质量门槛** — 先运行自动几何检查和固定视角 QA，再进入用户视觉验收。
+- **失败关闭** — 模板缺失、证据不足、拓扑损坏或候选被拒绝时，不会静默退回到看似合理的
+  基础体或体素外壳。
+- **全程可追踪** — 分开记录来源身份、工作流状态、检查结果和验收状态，便于审计。
+
+## 可以做什么
+
+| 能力 | 输出 |
+| --- | --- |
+| 多视图重建 | 为受支持的人物、风格化角色和产品提供连续模板拟合；为已对齐的物体轮廓提供六视图 visual-hull 重建。 |
+| 声明式 Blender 建模 | 根据结构化模型声明，可重复地构建组件化 Blender 场景并导出模型。 |
+| 有边界的几何精修 | 关键点拟合、标注区域压低、保持拓扑的平滑、附着特征和受控手工精修。 |
+| 骨架与动画 | 可审计的生物 Armature、只记录旋转的骨骼动画，以及分段模型在无 skin 权重条件下的刚性 Bone Parent 运动。 |
+| 只修改外观 | 在保持已验收几何与 UV 不变的条件下修改材质或皮肤。 |
+| QA 与来源记录 | 几何门槛、固定视角渲染、重新打开审计、校验和，以及明确的预览/验收状态。 |
+
+## 快速开始
+
+先克隆仓库；如果要运行仓库内的几何脚本，再创建隔离的 Python 环境：
+
+```bash
+git clone https://github.com/d8dzmf5mfn/viewforge-3d.git
+cd viewforge-3d
+```
+
+受支持的 Python 配置参见[虚拟环境指南](docs/VIRTUAL_ENVIRONMENT.zh-CN.md)。在仓库根目录安装
+ViewForge Local 和 Codex 插件：
+
+```bash
+./local-app/scripts/build_app.sh release
+./local-app/scripts/install_app.sh
+codex plugin marketplace add "$(pwd)"
+codex plugin add viewforge-3d-toolkit@viewforge-3d
+```
+
+安装后新建一个 Codex 任务，使插件清单重新加载，再让路由器选择安全工作流：
+
+```text
+使用 $viewforge-3d-toolkit:viewforge-3d-router 为这个模型选择安全路线。
+```
+
+专项技能、打包方式和输出状态参见[详细指南](docs/GUIDE.zh-CN.md)。如果要让 ChatGPT Developer
+Mode 或其他设备访问本地几何运行时，请按照
+[ViewForge Local 安装、Tunnel 与 API Key 指南](local-app/USER_SETUP.zh-CN.md)操作。
+
+## 工作方式
+
+1. **锁定证据** — 清点给定视图、哈希、主体配置和每个来源的证据权限。
+2. **声明处理路线** — 明确选择重建、声明式建模、有边界精修、外观、骨架或动画，不在过程中
+   静默更换方法。
+3. **只构建证据支持的内容** — 仅拟合可以被支持的几何，对不可见或缺乏证据的深度保持不确定。
+4. **检查产物** — 按所选路线运行拓扑、往返、纹理、绑定和固定视角检查。
+5. **分开验收状态** — 自动门槛可以通过，但用户视觉验收仍然可以保持待确认。
 
 ## 仓库结构
 
@@ -25,31 +88,6 @@ ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据多视图�
 - `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — 隔离 Python 环境配置指南。
 - 英文文档分别位于 `README.md`、`docs/GUIDE.md` 和 `docs/VIRTUAL_ENVIRONMENT.md`。
 
-## 从这里开始
-
-1. 按照[虚拟环境指南](docs/VIRTUAL_ENVIRONMENT.zh-CN.md)创建隔离环境。
-2. 按照[详细指南](docs/GUIDE.zh-CN.md)安装插件并调用技能。
-3. 需要把本地几何运行时连接到 ChatGPT Developer Mode 时，按照
-   [ViewForge Local 安装、Tunnel 与 API Key 指南](local-app/USER_SETUP.zh-CN.md)操作。
-4. 不确定应使用哪条几何路线时，先调用路由技能：
-
-```text
-$viewforge-3d-toolkit:viewforge-3d-router
-```
-
-当人物、人形角色或动物模型只需要骨架、不需要权重时：
-
-```text
-$viewforge-3d-toolkit:build-biological-skeleton
-```
-
-当已验收 Armature 需要根据带完整骨架的关键姿势图生成动画，并让分段肢体在无权重条件下随骨骼
-移动时：
-
-```text
-$viewforge-3d-toolkit:animate-biological-skeleton
-```
-
 ## 边界
 
 - 当任务要求从二维证据重建时，不导入第三方成品三维模型。
@@ -60,8 +98,9 @@ $viewforge-3d-toolkit:animate-biological-skeleton
   无法在无权重条件下弯曲，因此会失败关闭。
 - 私有输入图片和受限工程图不会进入插件包。
 
-可分发插件包在本地生成到 `dist/`。生成模型、证据、虚拟环境、缓存和其他运行产物均不会进入
-Git。GitHub Release 可以单独附带对比图片，但它不是插件包的一部分。
+可分发插件包在本地生成到 `dist/`。生成模型、工作证据、虚拟环境、缓存和其他运行产物不会进入
+Git。上方演示图这类经过选择的文档对比素材不会进入生成的插件 ZIP，也不代表第三方图片被项目
+许可证重新授权。
 
 标注桥接器与来源无关。使用前必须显式配置锁定输入：
 
