@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "viewforge-local": {
+      "cwd": ".",
+      "command": "./bin/viewforge-local-mcp",
+      "args": [
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}

@@ -20,6 +20,7 @@ ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据多视图�
 - `scripts/` — 确定性构建和审计工具。
 - `tests/` — Python 测试。
 - `viewer/` — 本地模型与标注查看器。
+- `local-app/` — 私有 macOS MCP 宿主及其构建、连接指南。
 - `docs/GUIDE.zh-CN.md` — 详细安装和技能调用指南。
 - `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — 隔离 Python 环境配置指南。
 - 英文文档分别位于 `README.md`、`docs/GUIDE.md` 和 `docs/VIRTUAL_ENVIRONMENT.md`。
@@ -28,7 +29,9 @@ ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据多视图�
 
 1. 按照[虚拟环境指南](docs/VIRTUAL_ENVIRONMENT.zh-CN.md)创建隔离环境。
 2. 按照[详细指南](docs/GUIDE.zh-CN.md)安装插件并调用技能。
-3. 不确定应使用哪条几何路线时，先调用路由技能：
+3. 需要把本地几何运行时连接到 ChatGPT Developer Mode 时，按照
+   [ViewForge Local 安装、Tunnel 与 API Key 指南](local-app/USER_SETUP.zh-CN.md)操作。
+4. 不确定应使用哪条几何路线时，先调用路由技能：
 
 ```text
 $viewforge-3d-toolkit:viewforge-3d-router

@@ -1,4 +1,5 @@
 .DS_Store
+.env.local
 .venv/
 .uv-cache/
 .pytest_cache/
@@ -7,6 +8,7 @@
 .local/
 .tmp/
 build/
+.build/
 dist/
 *.egg-info/
 __pycache__/
