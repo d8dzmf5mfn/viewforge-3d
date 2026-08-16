@@ -16,6 +16,17 @@
 如果要运行仓库内的几何脚本，请先创建 Python 环境，参见
 [`VIRTUAL_ENVIRONMENT.zh-CN.md`](VIRTUAL_ENVIRONMENT.zh-CN.md)。
 
+要让 Codex 暴露 App 内置的本地 MCP 工具，先构建并安装 ViewForge Local：
+
+```bash
+./local-app/scripts/build_app.sh release
+./local-app/scripts/install_app.sh
+```
+
+安装脚本会把 App 放到 `~/Applications/ViewForge Local.app`。这是必要步骤，因为已安装插件的
+启动器从 Codex 缓存目录运行，无法依赖仓库内的 `dist` 相对路径。App、Tunnel 和 API Key 的完整
+设置参见[私有连接指南](../local-app/USER_SETUP.zh-CN.md)。
+
 在克隆仓库的根目录注册本地 marketplace 并安装插件：
 
 ```bash

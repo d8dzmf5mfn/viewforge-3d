@@ -16,6 +16,18 @@
 Create the Python environment first if you will run bundled geometry scripts. See
 [`VIRTUAL_ENVIRONMENT.md`](VIRTUAL_ENVIRONMENT.md).
 
+To expose the bundled local MCP tools, build and install ViewForge Local first:
+
+```bash
+./local-app/scripts/build_app.sh release
+./local-app/scripts/install_app.sh
+```
+
+The install step places the app at `~/Applications/ViewForge Local.app`. This is required because
+the installed plugin launcher runs from the Codex cache and cannot resolve the repository `dist`
+directory. See the [private connection guide](../local-app/USER_SETUP.zh-CN.md) for app, Tunnel, and
+API-key setup.
+
 From the cloned repository root, register the repo-local marketplace and install the plugin:
 
 ```bash
