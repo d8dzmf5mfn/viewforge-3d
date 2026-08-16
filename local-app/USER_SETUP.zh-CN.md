@@ -391,7 +391,108 @@ tunnel-client doctor --profile viewforge-local --explain
 
 不要使用 `0.0.0.0`，否则可能把 Tunnel 管理页面暴露给局域网。
 
-## 11. 最终检查清单
+## 11. 交给 Coding Agent 的本地 App 构建提示词
+
+把下面整段内容复制给能够读取本地仓库、编辑文件并运行 Terminal 命令的 coding agent。Agent 应在 ViewForge 3D 仓库根目录开始工作。
+
+```text
+你正在 ViewForge 3D 仓库根目录工作。请在当前 Mac 上实现、构建并验证一个可运行的 `ViewForge Local.app`，让本机 Blender 和 ViewForge MCP 可以在之后通过 OpenAI Secure MCP Tunnel 接入 ChatGPT Developer Mode。
+
+本次任务范围：只完成本地 App、MCP 运行时及本地验证。不要创建或修改用户的 OpenAI Tunnel，不要申请或读取真实 API Key，不要连接 ChatGPT，不要提交 Git、推送、创建 PR、打包发布或上传任何文件，除非用户之后明确授权。
+
+开始前：
+
+1. 阅读仓库中的 `AGENTS.md`、README、现有 `local-app/`、`src/face3d/local_mcp/`、`plugins/viewforge-3d-toolkit/`、`pyproject.toml` 和相关测试。
+2. 运行 `git status --short`，记录已有改动。它们属于用户；不要覆盖、还原、暂存或提交无关文件。
+3. 检查当前 Mac 架构、macOS 版本、Swift、uv、ripgrep 和 Blender 是否可用。不要静默安装大型依赖；需要安装时先说明原因并请求用户授权。
+4. 优先复用仓库已有架构和构建脚本。如果实现已经存在，只做构建所必需的最小修复；不要重写已经正常工作的模块。
+
+必须达到的本地 App 契约：
+
+- 产品名：`ViewForge Local`。
+- 目标系统：macOS 14 或更高版本，SwiftUI 界面。
+- 构建输出：`dist/viewforge-local/ViewForge Local.app`。
+- MCP transport：Streamable HTTP，且只能监听 `127.0.0.1:8765`。
+- MCP URL：`http://127.0.0.1:8765/mcp`。
+- 健康检查：`http://127.0.0.1:8765/healthz`；只有工作区、Blender 和插件运行时均有效时才返回 `status: ready`。
+- Blender 是外部依赖，优先检测 `/Applications/Blender.app/Contents/MacOS/Blender` 和 `~/Applications/Blender.app/Contents/MacOS/Blender`。
+- Blender 任务必须后台运行、禁用脚本自动执行，并产生新的不可变任务目录；不得覆盖输入模型。
+- App 本地状态目录：`~/Library/Application Support/ViewForge Local`。
+- App 必须允许用户选择工作区、重新检测 Blender、查看 MCP 状态、复制 MCP URL、打开本地记录，并检测/启动名为 `viewforge-local` 的 tunnel-client Profile。
+- tunnel-client 只从 `/opt/homebrew/bin/tunnel-client`、`/usr/local/bin/tunnel-client` 或 `~/.local/bin/tunnel-client` 检测。
+- App 不得内置 API Key、Tunnel ID、用户名、开发机绝对路径或个人组织/项目 ID。
+- 如果 App 支持从工作区 `.env.local` 读取 Tunnel 运行密钥，只允许变量 `OPENAI_API_KEY`，必须拒绝权限宽于 `600` 的文件，并且不得把密钥写入日志、配置、错误消息或进程参数。
+
+必须达到的 MCP 契约：
+
+- 所有可注册资产必须位于用户选择的工作区内；解析符号链接后仍需检查边界，拒绝目录穿越和工作区外文件。
+- 支持 `.glb`、`.gltf`、`.blend`、`.json`、`.png`、`.jpg`、`.jpeg`、`.mov` 和 `.mp4`。
+- 注册后使用不可猜测或内容寻址的 `asset_...` ID；任务使用 `job_...`；产物使用 `artifact_...`。
+- 对外工具结果不得返回本地绝对路径。读取 JSON 产物时必须清理工作区、插件和状态目录路径。
+- 写操作生成新产物，不得修改源资产。
+- 至少提供并正确标注以下工具：
+  - `viewforge_status`
+  - `register_local_asset`
+  - `list_local_assets`
+  - `build_biological_skeleton`
+  - `create_bone_animation`
+  - `bind_rigid_components`
+  - `get_viewforge_job`
+  - `list_viewforge_jobs`
+  - `list_job_artifacts`
+  - `read_json_artifact`
+- 骨骼任务支持 `humanoid-v1` 和 `quadruped-v1`。
+- 动画任务必须保留根骨骼的合理 X 轴位移，并支持只生成骨骼动画。
+- 刚性绑定用于分段方块模型：组件跟随骨骼，但不创建 skin weights，也不做网格形变。
+- 同一时间只允许一个 Blender 写任务排队或运行，避免多个进程同时修改同一状态。
+
+如果 `local-app/` 已经完整：
+
+1. 先运行 `swift build --package-path local-app`。
+2. 运行仓库已有的本地 MCP、骨骼、动画和绑定测试。
+3. 使用 `./local-app/scripts/build_app.sh release` 构建 Release App。
+4. 只有测试或构建证明存在问题时才修改源码，然后重新运行失败检查。
+
+如果 `local-app/` 尚不存在或不完整：
+
+1. 创建 Swift Package，最低 macOS 版本为 14，提供 SwiftUI 可执行目标 `ViewForgeLocal`。
+2. 创建上述 SwiftUI 控制界面和进程生命周期管理；退出 App 时可靠终止它启动的 MCP 与 tunnel-client 子进程。
+3. 在 `src/face3d/local_mcp/` 实现配置、受限资产注册、不可变任务、Blender worker、结构化结果和 MCP server。
+4. 在 `local-app/scripts/build_app.sh` 实现可重复构建：
+   - 使用 uv 管理的 CPython 3.11；
+   - 把 Python 运行时、MCP Python 依赖、`face3d.local_mcp` 和 `viewforge-3d-toolkit` 复制进 App Resources；
+   - 修正 App 内 Python 启动器和动态库引用；
+   - 删除指向开发机的 Swift toolchain rpath；
+   - 对本地测试产物执行 ad-hoc codesign；
+   - 不执行 Developer ID 签名、公证、DMG 打包或发布。
+5. 在 `plugins/viewforge-3d-toolkit/.mcp.json` 和 `bin/viewforge-local-mcp` 中提供 stdio 回退入口，但不得写死仓库或用户绝对路径。
+6. 添加单元测试，覆盖工作区越界、符号链接逃逸、资产 ID、路径脱敏、任务状态、并发写任务限制和工具 annotations。
+
+构建完成后必须验证：
+
+1. `swift build --package-path local-app` 成功。
+2. 相关 Python 测试全部成功。
+3. `./local-app/scripts/build_app.sh release` 成功并产生预期 `.app`。
+4. `codesign --verify --deep --strict "dist/viewforge-local/ViewForge Local.app"` 成功。
+5. 扫描 App bundle，确认没有开发机 `/Users/...`、真实 API Key、真实 Tunnel ID、组织 ID、项目 ID、私钥或 `.env.local`。
+6. 如果当前权限允许启动 GUI，启动 App、选择一个临时工作区，确认 `/healthz` 返回 `ready`；如果 GUI 权限不足，明确报告未执行，不能把它写成通过。
+7. 对 MCP 做一次只读 `viewforge_status` 验证。除非用户提供专用测试模型并明确允许，否则不要创建 Blender 写任务。
+8. 构建或测试生成的临时文件只能放在仓库构建目录或系统临时目录；清理时只能删除本次任务明确创建的临时文件。
+
+最终只报告：
+
+- App 相对输出位置；
+- 实际运行过的检查及结果；
+- 是否仍依赖外部 Blender；
+- 未执行或失败的检查与原因；
+- 工作区中哪些文件由本次任务修改。
+
+不要在最终回复中输出 API Key、Tunnel ID、本机用户名、绝对工作区路径或未经脱敏的日志。不要仅因为编译成功就声称 ChatGPT Tunnel 已经连接；Tunnel 配置由用户按照本指南后续步骤自行完成。
+```
+
+这个提示词刻意把“构建本地 App”和“连接用户自己的 Tunnel”分开。Agent 负责实现与验证本机运行时；用户负责 Platform 权限、运行密钥、Tunnel ID 和 ChatGPT Developer Mode。
+
+## 12. 最终检查清单
 
 - [ ] App 由用户自己构建，或来自已签名、公证的可信发行包。
 - [ ] Blender 已安装并被 App 检测到。
