@@ -1,7 +1,7 @@
 {
   "name": "viewforge-3d-toolkit",
-  "version": "0.5.0+codex.20260816061828",
-  "description": "Quality-gated local geometry generation, multi-view 3D construction, controlled Blender modeling, biological skeleton animation, no-skin rigid binding, mesh refinement, and same-geometry appearance skills.",
+  "version": "0.6.0+codex.20260816132353",
+  "description": "Quality-gated local geometry generation, multi-view 3D construction, controlled Blender modeling and rendering, biological skeleton animation, no-skin rigid binding, mesh refinement, and same-geometry appearance skills.",
   "author": {
     "name": "ViewForge 3D Contributors"
   },
@@ -16,19 +16,21 @@
     "animation",
     "rigid-binding",
     "mesh",
-    "modeling"
+    "modeling",
+    "rendering"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "ViewForge 3D",
-    "shortDescription": "Build, animate, rig, and refine traceable 3D models.",
-    "longDescription": "Use the bundled local geometry runtime for procedural and multi-view modeling, or controlled declarative Blender jobs for general objects; create and animate bone-only biological armatures, rigid-bind segmented models without skin weights, refine bounded regions, validate topology and provenance, and apply appearance without moving accepted geometry.",
+    "shortDescription": "Build, render, animate, rig, and refine traceable 3D models.",
+    "longDescription": "Use the bundled local geometry runtime for procedural and multi-view modeling, controlled declarative Blender jobs, and fixed-view rendering for general objects; create and animate bone-only biological armatures, rigid-bind segmented models without skin weights, refine bounded regions, validate topology and provenance, and apply appearance without moving accepted geometry.",
     "developerName": "ViewForge 3D Contributors",
     "category": "Creative",
     "capabilities": [
       "Route",
       "Model",
+      "Render",
       "Reconstruct",
       "Skeleton",
       "Animate",
@@ -39,6 +41,7 @@
     "defaultPrompt": [
       "Use $viewforge-3d-toolkit:viewforge-3d-router to choose the safe workflow for this 3D task.",
       "Call viewforge_status first. Prefer bundled tools; use build_declarative_blender_model for controlled Blender jobs.",
+      "Use $viewforge-3d-toolkit:render-model-preview to render a registered Blend or GLB and return its contact sheet to the conversation.",
       "Use $viewforge-3d-toolkit:build-biological-skeleton for a bone-only human or animal Armature without weights.",
       "Use $viewforge-3d-toolkit:animate-biological-skeleton to animate and rigid-bind segmented parts without skin weights."
     ]

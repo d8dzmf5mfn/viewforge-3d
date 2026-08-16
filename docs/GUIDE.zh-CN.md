@@ -50,6 +50,8 @@ codex plugin add viewforge-3d-toolkit@viewforge-3d
 ```text
 使用 $viewforge-3d-toolkit:reconstruct-3d-from-multiview 根据这些二维图片构建无贴皮物体预览。
 
+使用 $viewforge-3d-toolkit:render-model-preview 为这个已注册的 Blend 或 GLB 渲染固定视角 PNG，并把预览接触表返回对话。
+
 使用 $viewforge-3d-toolkit:build-biological-skeleton 为这个人物或动物建立纯骨架 Armature，不添加权重。
 
 使用 $viewforge-3d-toolkit:animate-biological-skeleton 根据带完整骨架的关键姿势图驱动已验收 Armature，并在无 skin 权重条件下刚性绑定分段肢体。

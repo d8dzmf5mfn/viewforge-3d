@@ -2,6 +2,8 @@
 
 本指南用于让每位用户在自己的 Mac 上构建并运行 ViewForge Local，再通过 OpenAI Secure MCP Tunnel 连接到自己的 ChatGPT Developer Mode。
 
+App 界面默认跟随系统语言，也可在窗口右上角切换中文或 English。
+
 这不是公开发布流程。Secure MCP Tunnel 用于私人连接和开发者测试，不会把本地 MCP 服务直接暴露到公网，也不能用于公开插件分发。
 
 官方资料：
@@ -478,6 +480,7 @@ tunnel-client doctor --profile viewforge-local --explain
   - `bind_rigid_components`
   - `inspect_modeling_profile`
   - `build_declarative_blender_model`
+  - `render_model_preview`
   - `generate_pixel_cube`
   - `reconstruct_six_view_visual_hull`
   - `validate_face_multiview`
@@ -488,7 +491,10 @@ tunnel-client doctor --profile viewforge-local --explain
   - `list_viewforge_jobs`
   - `list_job_artifacts`
   - `read_json_artifact`
+  - `read_image_artifact`
 - 骨骼任务支持 `humanoid-v1` 和 `quadruped-v1`。
+- 渲染任务只接受已注册或已生成的 `.blend` / `.glb`，使用固定视角和受控材质、背景参数；
+  源文件保持不变。任务完成后通过 `read_image_artifact` 显式读取选定图片，不返回本地路径。
 - 动画任务必须保留根骨骼的合理 X 轴位移，并支持只生成骨骼动画。
 - 刚性绑定用于分段方块模型：组件跟随骨骼，但不创建 skin weights，也不做网格形变。
 - 六视图 Visual Hull 只接受经过检查的正交轮廓图，输入角色为 `front/back/left/right/top/bottom`；输出必须带 GLB、QA、输入哈希和坐标约定，并保持 `previewOnly=true`，不得把轮廓无法证明的凹陷说成正式重建。
