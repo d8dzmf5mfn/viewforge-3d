@@ -29,12 +29,15 @@ asset, job, and artifact IDs; absolute local paths stay in the local state store
 
 ```bash
 ./local-app/scripts/build_app.sh
+./local-app/scripts/install_app.sh
 ```
 
-The local app is written to `dist/viewforge-local/ViewForge Local.app`. The build uses a copied
-uv-managed CPython distribution and installs the production dependency graph from `uv.lock`, so the
-finished app does not depend on the repository `.venv`. Licensed model assets are not embedded;
-production profiles continue to fail closed until the user provides and records them locally.
+The build artifact is written to `dist/viewforge-local/ViewForge Local.app`; the installer copies it
+to `~/Applications/ViewForge Local.app`, where the cached Codex plugin launcher can discover it.
+Existing installs are preserved as timestamped backups. The build uses a copied uv-managed CPython
+distribution and installs the production dependency graph from `uv.lock`, so the finished app does
+not depend on the repository `.venv`. Licensed model assets are not embedded; production profiles
+continue to fail closed until the user provides and records them locally.
 
 ## Local checks
 

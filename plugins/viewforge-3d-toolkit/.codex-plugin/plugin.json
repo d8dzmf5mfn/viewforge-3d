@@ -1,6 +1,6 @@
 {
   "name": "viewforge-3d-toolkit",
-  "version": "0.5.0+codex.20260816044453",
+  "version": "0.5.0+codex.20260816061828",
   "description": "Quality-gated local geometry generation, multi-view 3D construction, controlled Blender modeling, biological skeleton animation, no-skin rigid binding, mesh refinement, and same-geometry appearance skills.",
   "author": {
     "name": "ViewForge 3D Contributors"
@@ -38,9 +38,9 @@
     ],
     "defaultPrompt": [
       "Use $viewforge-3d-toolkit:viewforge-3d-router to choose the safe workflow for this 3D task.",
-      "Call viewforge_status before local geometry work. Prefer the bundled non-Blender modeling tools when they match; use build_declarative_blender_model for controlled general modeling and never request arbitrary local scripts.",
-      "Use $viewforge-3d-toolkit:build-biological-skeleton to build a bone-only Armature for a person or animal without weights.",
-      "Use $viewforge-3d-toolkit:animate-biological-skeleton to animate bones and rigid-bind segmented body parts without skin weights."
+      "Call viewforge_status first. Prefer bundled tools; use build_declarative_blender_model for controlled Blender jobs.",
+      "Use $viewforge-3d-toolkit:build-biological-skeleton for a bone-only human or animal Armature without weights.",
+      "Use $viewforge-3d-toolkit:animate-biological-skeleton to animate and rigid-bind segmented parts without skin weights."
     ]
   }
 }

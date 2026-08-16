@@ -106,10 +106,28 @@ dist/viewforge-local/ViewForge Local.app
 
 当前脚本生成的是本机测试用的临时签名 App。需要分发给其他用户时，应另行完成 Developer ID 签名和公证；不要要求用户绕过 macOS Gatekeeper。
 
-### 3.4 启动 App
+### 3.4 安装并启动 App
+
+构建完成后，把 App 安装到当前用户的 Applications 目录：
 
 ```bash
-open "dist/viewforge-local/ViewForge Local.app"
+./local-app/scripts/install_app.sh
+```
+
+安装结果：
+
+```text
+~/Applications/ViewForge Local.app
+```
+
+这一步也是 Codex 插件暴露完整 MCP 工具清单的必要条件。插件实际从 Codex 缓存目录运行，不能
+依赖仓库内的 `dist` 相对路径；其启动器会从 `/Applications` 或 `~/Applications` 查找 ViewForge
+Local。重复安装时，脚本会先把旧 App 保留为带 UTC 时间戳的 `ViewForge Local.previous-*.app`。
+
+启动已安装的 App：
+
+```bash
+open "$HOME/Applications/ViewForge Local.app"
 ```
 
 首次启动后：
