@@ -24,6 +24,7 @@ tunnel-client（用户的 Mac）
         ▼
 ViewForge Local.app
         │
+        ├── App 内置完整 ViewForge Python 几何运行时
         ├── 本机 Blender
         ├── 用户选择的模型工作区
         └── 本机任务与产物目录
@@ -31,7 +32,7 @@ ViewForge Local.app
 
 必须同时保持以下两个进程运行：
 
-1. `ViewForge Local.app`：提供本地 MCP 服务并调用 Blender。
+1. `ViewForge Local.app`：提供本地 MCP 服务，运行内置几何流水线，并按需调用 Blender。
 2. `tunnel-client`：把 ChatGPT 的 MCP 请求转发到本地服务。
 
 ## 2. 前置条件
@@ -98,7 +99,9 @@ brew install uv ripgrep
 dist/viewforge-local/ViewForge Local.app
 ```
 
-该构建会把 Python 3.11 运行时、ViewForge MCP 服务和 ViewForge 3D 工具包复制进 App，不依赖仓库的 `.venv`。Blender 不会被打包，仍需单独安装。
+该构建会根据 `uv.lock` 把 Python 3.11、完整 `face3d` 源码、ViewForge MCP、OpenCV、MediaPipe、Trimesh、Open3D、Torch 等生产依赖和 ViewForge 3D 工具包复制进 App，不依赖仓库的 `.venv`。当前完整 App 体积较大，首次构建需要下载约百个 Python 包。Blender 不会被打包，仍需单独安装；有些本地几何工具不依赖 Blender。
+
+受许可证和用户隐私约束的模板、Landmarker 等模型资产不会自动塞进 App。正式重建会检查本地资产清单和哈希，缺失时失败关闭；六视图 Visual Hull 和程序化 Pixel Cube 不依赖这些模型资产。
 
 当前脚本生成的是本机测试用的临时签名 App。需要分发给其他用户时，应另行完成 Developer ID 签名和公证；不要要求用户绕过 macOS Gatekeeper。
 
@@ -121,7 +124,18 @@ open "dist/viewforge-local/ViewForge Local.app"
 curl -fsS http://127.0.0.1:8765/healthz
 ```
 
-预期返回的 `status` 为 `ready`。如果显示 `needs-configuration`，重新检查工作区、Blender 和 App 内置插件运行时。
+预期返回的 `status` 为 `ready`，并且 `modelingRuntimeAvailable` 为 `true`。如果显示 `needs-configuration`，重新检查工作区、App 内置几何运行时、Blender 和插件运行时。
+
+### 3.5 本地建模能力
+
+ViewForge Local 暴露两类彼此独立的引擎，不会把所有建模任务都转给 Blender：
+
+- App 内置虚拟环境：程序化 Pixel Cube、六视图正交轮廓 Visual Hull、三视图人脸输入验证、连续模板重建、人工蒙版确认后续跑以及 `.viewforge3d` 打包。
+- 本机 Blender：声明式通用建模、生物骨骼、骨骼动画和方块部件刚性绑定。
+
+`build_declarative_blender_model` 可以直接接收 ChatGPT 生成的结构化 `spec`，不要求 ChatGPT 先在本机创建 JSON 文件；也可以接收用户主动放进工作区并注册的 JSON。它只接受白名单 primitive 或显式顶点/面、变换、纯色材质、平滑和 bevel，不接受任意 Python 或 Blender 脚本。
+
+六视图 Visual Hull 是轮廓交集预览，不能证明遮挡区域或凹陷；产物会保持 `previewOnly=true`。三视图人脸路线才是正式重建路线，并会在授权模板或哈希记录缺失时失败关闭。
 
 ## 4. 安装 tunnel-client
 
@@ -297,6 +311,7 @@ http://127.0.0.1:8080/ui
 
 - `ready: true`
 - 工作区已配置
+- 完整几何运行时可用
 - Blender 可用
 - 插件运行时可用
 
@@ -327,7 +342,7 @@ ViewForge Local 会在本机把相对路径解析到所选工作区，并拒绝�
 
 隐私边界：
 
-- 模型文件由本地 MCP 和 Blender 读取；除非用户另行上传，工具不会把完整 GLB 或 Blend 文件作为结果发送给 ChatGPT。
+- 模型、图片和配置文件由本地 MCP、内置几何运行时和 Blender 读取；除非用户另行上传，工具不会把完整 GLB 或 Blend 文件作为结果发送给 ChatGPT。
 - ChatGPT 仍会看到工具调用参数和工具结果，例如相对文件名、资产 ID、文件大小、哈希、任务状态及主动读取的 QA JSON。
 - 本地状态、任务文件和日志位于 `~/Library/Application Support/ViewForge Local`，其中可能包含绝对路径。分享日志前必须人工检查并脱敏。
 - 不要启用 `tunnel-client` 的不安全原始 HTTP 日志选项。
@@ -396,7 +411,7 @@ tunnel-client doctor --profile viewforge-local --explain
 把下面整段内容复制给能够读取本地仓库、编辑文件并运行 Terminal 命令的 coding agent。Agent 应在 ViewForge 3D 仓库根目录开始工作。
 
 ```text
-你正在 ViewForge 3D 仓库根目录工作。请在当前 Mac 上实现、构建并验证一个可运行的 `ViewForge Local.app`，让本机 Blender 和 ViewForge MCP 可以在之后通过 OpenAI Secure MCP Tunnel 接入 ChatGPT Developer Mode。
+你正在 ViewForge 3D 仓库根目录工作。请在当前 Mac 上实现、构建并验证一个可运行的 `ViewForge Local.app`，把仓库虚拟环境中的非 Blender 几何工具和受控 Blender 工具都暴露为本地 MCP，之后可通过 OpenAI Secure MCP Tunnel 接入 ChatGPT Developer Mode。
 
 本次任务范围：只完成本地 App、MCP 运行时及本地验证。不要创建或修改用户的 OpenAI Tunnel，不要申请或读取真实 API Key，不要连接 ChatGPT，不要提交 Git、推送、创建 PR、打包发布或上传任何文件，除非用户之后明确授权。
 
@@ -414,9 +429,11 @@ tunnel-client doctor --profile viewforge-local --explain
 - 构建输出：`dist/viewforge-local/ViewForge Local.app`。
 - MCP transport：Streamable HTTP，且只能监听 `127.0.0.1:8765`。
 - MCP URL：`http://127.0.0.1:8765/mcp`。
-- 健康检查：`http://127.0.0.1:8765/healthz`；只有工作区、Blender 和插件运行时均有效时才返回 `status: ready`。
+- 健康检查：`http://127.0.0.1:8765/healthz`；必须分别报告 `modelingRuntimeAvailable` 与 `blenderToolsAvailable`。工作区已配置且至少一类几何引擎可用时才返回 `status: ready`。
 - Blender 是外部依赖，优先检测 `/Applications/Blender.app/Contents/MacOS/Blender` 和 `~/Applications/Blender.app/Contents/MacOS/Blender`。
 - Blender 任务必须后台运行、禁用脚本自动执行，并产生新的不可变任务目录；不得覆盖输入模型。
+- 不得向远程 MCP 暴露任意 Python、任意 shell 或任意 Blender Python 执行。通用 Blender 建模必须使用版本化声明式 JSON，只允许受控 primitive、显式 vertices/faces、变换、纯色材质、平滑和 bevel；实际执行脚本必须来自插件自身。
+- 非 Blender 建模必须调用 App 内置的完整 `face3d` 流水线。不得用只有 `mcp` 的精简运行时冒充完整建模环境。
 - App 本地状态目录：`~/Library/Application Support/ViewForge Local`。
 - App 必须允许用户选择工作区、重新检测 Blender、查看 MCP 状态、复制 MCP URL、打开本地记录，并检测/启动名为 `viewforge-local` 的 tunnel-client Profile。
 - tunnel-client 只从 `/opt/homebrew/bin/tunnel-client`、`/usr/local/bin/tunnel-client` 或 `~/.local/bin/tunnel-client` 检测。
@@ -426,7 +443,8 @@ tunnel-client doctor --profile viewforge-local --explain
 必须达到的 MCP 契约：
 
 - 所有可注册资产必须位于用户选择的工作区内；解析符号链接后仍需检查边界，拒绝目录穿越和工作区外文件。
-- 支持 `.glb`、`.gltf`、`.blend`、`.json`、`.png`、`.jpg`、`.jpeg`、`.mov` 和 `.mp4`。
+- YAML 配置本身以及它引用的模板、Landmarker、清单和其他本地资产都必须位于工作区内；创建任务时锁定配置哈希，任务开始前再次验证，拒绝配置被替换。
+- 支持 `.glb`、`.gltf`、`.blend`、`.yaml`、`.yml`、`.json`、`.png`、`.jpg`、`.jpeg`、`.mov` 和 `.mp4`。
 - 注册后使用不可猜测或内容寻址的 `asset_...` ID；任务使用 `job_...`；产物使用 `artifact_...`。
 - 对外工具结果不得返回本地绝对路径。读取 JSON 产物时必须清理工作区、插件和状态目录路径。
 - 写操作生成新产物，不得修改源资产。
@@ -437,6 +455,14 @@ tunnel-client doctor --profile viewforge-local --explain
   - `build_biological_skeleton`
   - `create_bone_animation`
   - `bind_rigid_components`
+  - `inspect_modeling_profile`
+  - `build_declarative_blender_model`
+  - `generate_pixel_cube`
+  - `reconstruct_six_view_visual_hull`
+  - `validate_face_multiview`
+  - `reconstruct_face_multiview`
+  - `continue_face_reconstruction`
+  - `package_face_reconstruction`
   - `get_viewforge_job`
   - `list_viewforge_jobs`
   - `list_job_artifacts`
@@ -444,12 +470,15 @@ tunnel-client doctor --profile viewforge-local --explain
 - 骨骼任务支持 `humanoid-v1` 和 `quadruped-v1`。
 - 动画任务必须保留根骨骼的合理 X 轴位移，并支持只生成骨骼动画。
 - 刚性绑定用于分段方块模型：组件跟随骨骼，但不创建 skin weights，也不做网格形变。
-- 同一时间只允许一个 Blender 写任务排队或运行，避免多个进程同时修改同一状态。
+- 六视图 Visual Hull 只接受经过检查的正交轮廓图，输入角色为 `front/back/left/right/top/bottom`；输出必须带 GLB、QA、输入哈希和坐标约定，并保持 `previewOnly=true`，不得把轮廓无法证明的凹陷说成正式重建。
+- 当前连续模板人脸流水线使用 `front/left45/right45` 三视图和注册的 YAML 配置。模型资产必须存在、记录并通过哈希检查；首次重建产生蒙版后进入 `review_required`。只有人在查看蒙版后显式传入 `approve_masks=true`，才可复制为新任务续跑。
+- `.viewforge3d` 只由成功的正式重建任务生成；MCP 不负责发布或上传。
+- 同一时间只允许一个本地几何写任务排队或运行，避免多个进程同时争用资源或状态。
 
 如果 `local-app/` 已经完整：
 
 1. 先运行 `swift build --package-path local-app`。
-2. 运行仓库已有的本地 MCP、骨骼、动画和绑定测试。
+2. 运行仓库已有的本地 MCP、六视图建模、重建、骨骼、动画和绑定测试。
 3. 使用 `./local-app/scripts/build_app.sh release` 构建 Release App。
 4. 只有测试或构建证明存在问题时才修改源码，然后重新运行失败检查。
 
@@ -457,16 +486,18 @@ tunnel-client doctor --profile viewforge-local --explain
 
 1. 创建 Swift Package，最低 macOS 版本为 14，提供 SwiftUI 可执行目标 `ViewForgeLocal`。
 2. 创建上述 SwiftUI 控制界面和进程生命周期管理；退出 App 时可靠终止它启动的 MCP 与 tunnel-client 子进程。
-3. 在 `src/face3d/local_mcp/` 实现配置、受限资产注册、不可变任务、Blender worker、结构化结果和 MCP server。
+3. 在 `src/face3d/local_mcp/` 实现配置、受限资产注册、不可变任务、Python 几何 worker、Blender worker、人工审核状态、结构化结果和 MCP server。
 4. 在 `local-app/scripts/build_app.sh` 实现可重复构建：
    - 使用 uv 管理的 CPython 3.11；
-   - 把 Python 运行时、MCP Python 依赖、`face3d.local_mcp` 和 `viewforge-3d-toolkit` 复制进 App Resources；
+   - 使用 `uv export --frozen --no-dev --no-emit-project` 从 `uv.lock` 导出生产依赖，安装进 App 内置运行时；不得只安装 `mcp`；
+   - 把完整 `src/face3d` 和 `viewforge-3d-toolkit` 复制进 App Resources，而不是只复制 `face3d.local_mcp`；
    - 修正 App 内 Python 启动器和动态库引用；
+   - 所有 App/stdio 启动路径都设置 `PYTHONDONTWRITEBYTECODE=1`，避免运行后新增 `.pyc` 破坏代码签名；
    - 删除指向开发机的 Swift toolchain rpath；
    - 对本地测试产物执行 ad-hoc codesign；
    - 不执行 Developer ID 签名、公证、DMG 打包或发布。
 5. 在 `plugins/viewforge-3d-toolkit/.mcp.json` 和 `bin/viewforge-local-mcp` 中提供 stdio 回退入口，但不得写死仓库或用户绝对路径。
-6. 添加单元测试，覆盖工作区越界、符号链接逃逸、资产 ID、路径脱敏、任务状态、并发写任务限制和工具 annotations。
+6. 添加单元测试，覆盖工作区越界、符号链接逃逸、资产 ID、路径脱敏、任务状态、`review_required`、并发写任务限制、工具 annotations、六视图 GLB 和非 Blender 子进程作业。
 
 构建完成后必须验证：
 
@@ -474,16 +505,19 @@ tunnel-client doctor --profile viewforge-local --explain
 2. 相关 Python 测试全部成功。
 3. `./local-app/scripts/build_app.sh release` 成功并产生预期 `.app`。
 4. `codesign --verify --deep --strict "dist/viewforge-local/ViewForge Local.app"` 成功。
-5. 扫描 App bundle，确认没有开发机 `/Users/...`、真实 API Key、真实 Tunnel ID、组织 ID、项目 ID、私钥或 `.env.local`。
-6. 如果当前权限允许启动 GUI，启动 App、选择一个临时工作区，确认 `/healthz` 返回 `ready`；如果 GUI 权限不足，明确报告未执行，不能把它写成通过。
-7. 对 MCP 做一次只读 `viewforge_status` 验证。除非用户提供专用测试模型并明确允许，否则不要创建 Blender 写任务。
-8. 构建或测试生成的临时文件只能放在仓库构建目录或系统临时目录；清理时只能删除本次任务明确创建的临时文件。
+5. 使用 App 内置 Python 导入 `cv2`、`mediapipe`、`numpy`、`open3d`、`scipy`、`skimage`、`torch`、`trimesh` 和 `face3d.local_mcp.server`，确认 `modelingRuntimeAvailable=true`；导入时必须禁止写 `.pyc`，导入后再次验签。
+6. 扫描 App bundle，确认没有开发机 `/Users/...`、真实 API Key、真实 Tunnel ID、组织 ID、项目 ID、私钥或 `.env.local`。
+7. 使用 App 内置 Python 列举 MCP 工具，确认上述 18 个工具存在，并真实运行一次小型 `generate_pixel_cube` 作业；不得只验证函数导入。
+8. 使用仓库自带的声明式示例 JSON 运行一次 Blender 后台作业，确认输出 `.blend`、`.glb` 和 QA，且 QA 记录 `arbitraryCodeExecution=false`。这不需要用户私有模型。
+9. 如果当前权限允许启动 GUI，启动 App、选择一个临时工作区，确认 `/healthz` 返回 `ready`；如果 GUI 权限不足，明确报告未执行，不能把它写成通过。
+10. 构建或测试生成的临时文件只能放在仓库构建目录或系统临时目录；清理时只能删除本次任务明确创建的临时文件。
 
 最终只报告：
 
 - App 相对输出位置；
 - 实际运行过的检查及结果；
 - 是否仍依赖外部 Blender；
+- App 内置几何运行时是否通过导入与真实作业验证；
 - 未执行或失败的检查与原因；
 - 工作区中哪些文件由本次任务修改。
 
