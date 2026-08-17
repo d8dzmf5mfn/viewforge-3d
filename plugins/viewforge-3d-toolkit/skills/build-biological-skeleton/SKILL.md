@@ -20,6 +20,9 @@ coordinate authority.
 4. Use annotations only to review species and limb-chain intent. Resolve exact 3D joints from:
    - named segmented components and their actual geometry; or
    - an explicit landmark JSON in Blender world coordinates.
+   A six-part block-character proxy (`Head`, `Torso`, left/right `Arm`, left/right `Leg`) may use
+   the declared `coarse-segmented-humanoid-preview` route. That route measures the real 3D part
+   extents, records shared limb meshes as evidence, and remains pending visual signoff.
 5. If a continuous mesh has neither reliable component semantics nor explicit 3D landmarks, stop
    after annotation. Do not infer unsupported depth.
 
@@ -40,12 +43,21 @@ Run:
   --side-annotation skeleton-side.png
 ```
 
+The MCP tool accepts registered `asset_` IDs and generated `artifact_` IDs directly. Prefer the
+generated `.blend` artifact for declarative models so semantic component names remain available;
+GLB and glTF inputs remain supported. Landmark and component-map JSON can be supplied either by
+reference ID or inline through the MCP tool.
+
 For a continuous human or animal mesh, also pass `--landmarks landmarks.json`. Use the profile
 files in `assets/` as the required landmark and bone-graph contracts. Use `--component-map` only
 to map reliable source object names to humanoid semantic roles.
 
 Never add vertex groups, Armature modifiers, automatic weights, mesh parenting, IK controls, or
 animation in this skill. Every created bone must have `use_deform=false`.
+
+For a coarse six-part proxy, elbow, wrist, knee, and ankle locations are measured subdivisions of
+the source part extents. Rigid binding can move each arm or leg as one piece, but it cannot create
+real elbow or knee bending without separately segmented source geometry.
 
 ## Validate
 

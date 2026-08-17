@@ -297,27 +297,33 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         name="build_biological_skeleton",
         title="Build biological skeleton",
         description=(
-            "Use this when an approved GLB or glTF asset needs an immutable bone-only humanoid "
-            "or quadruped Armature with QA artifacts."
+            "Use this when an approved Blend, GLB, or glTF source needs an immutable bone-only "
+            "humanoid or quadruped Armature with QA artifacts. source_id accepts either an "
+            "asset_ ID or a generated artifact_ ID. Inline landmarks and component maps are "
+            "accepted when no registered JSON reference exists."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
     )
     def build_biological_skeleton(
-        asset_id: str,
+        source_id: str,
         profile: SkeletonProfile = "humanoid-v1",
         landmarks_asset_id: str | None = None,
         component_map_asset_id: str | None = None,
         front_annotation_asset_id: str | None = None,
         side_annotation_asset_id: str | None = None,
+        landmarks: dict[str, Any] | None = None,
+        component_map: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.build_skeleton(
-            asset_id=asset_id,
+            source_id=source_id,
             profile=profile,
             landmarks_asset_id=landmarks_asset_id,
             component_map_asset_id=component_map_asset_id,
             front_annotation_asset_id=front_annotation_asset_id,
             side_annotation_asset_id=side_annotation_asset_id,
+            landmarks=landmarks,
+            component_map=component_map,
         )
 
     @server.tool(
@@ -325,7 +331,8 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         title="Create bone animation",
         description=(
             "Use this when a bone-only Blend and matching skeleton/relative-coordinate documents "
-            "need a new immutable Blender Action."
+            "need a new immutable Blender Action. Blend and skeleton inputs accept asset_ or "
+            "artifact_ IDs; coordinates may be a JSON reference or an inline document."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
@@ -333,12 +340,14 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     def create_bone_animation(
         input_blend_id: str,
         skeleton_id: str,
-        coordinates_asset_id: str,
+        coordinates_asset_id: str | None = None,
+        coordinates: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.create_animation(
             input_blend_id=input_blend_id,
             skeleton_id=skeleton_id,
             coordinates_asset_id=coordinates_asset_id,
+            coordinates=coordinates,
         )
 
     @server.tool(
@@ -346,7 +355,9 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         title="Bind rigid model components",
         description=(
             "Use this when a segmented model must follow an animated Armature through rigid bone "
-            "parenting without skin weights or mesh deformation."
+            "parenting without skin weights or mesh deformation. Blend and skeleton inputs "
+            "accept asset_ or artifact_ IDs; the component mapping may be a JSON reference or "
+            "an inline document."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
@@ -354,12 +365,14 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     def bind_rigid_components(
         input_blend_id: str,
         skeleton_id: str,
-        mapping_asset_id: str,
+        mapping_asset_id: str | None = None,
+        mapping: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.bind_components(
             input_blend_id=input_blend_id,
             skeleton_id=skeleton_id,
             mapping_asset_id=mapping_asset_id,
+            mapping=mapping,
         )
 
     @server.tool(

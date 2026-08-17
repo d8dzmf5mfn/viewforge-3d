@@ -493,6 +493,12 @@ tunnel-client doctor --profile viewforge-local --explain
   - `read_json_artifact`
   - `read_image_artifact`
 - 骨骼任务支持 `humanoid-v1` 和 `quadruped-v1`。
+- `build_biological_skeleton` 的 `source_id` 同时接受 `asset_...` 和任务生成的
+  `artifact_...`，并支持 `.blend`、`.glb`、`.gltf`。声明式模型优先使用 `.blend` 产物以保留
+  组件名称；不需要先把 job artifact 重新注册成 local asset。
+- 没有注册 JSON 时，骨架关键点、组件映射、动画坐标和刚性绑定映射可以作为内联 JSON 传入。
+- Blender 几何任务失败时必须注册 `error.json` 产物，并可通过 `read_json_artifact` 读取清理过
+  本地路径的诊断信息。
 - 渲染任务只接受已注册或已生成的 `.blend` / `.glb`，使用固定视角和受控材质、背景参数；
   源文件保持不变。任务完成后通过 `read_image_artifact` 显式读取选定图片，不返回本地路径。
 - 动画任务必须保留根骨骼的合理 X 轴位移，并支持只生成骨骼动画。

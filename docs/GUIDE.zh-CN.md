@@ -93,6 +93,16 @@ codex plugin add viewforge-3d-toolkit@viewforge-3d
 modifier、网格父级关系或动画。人物和人形角色使用 `humanoid-v1`；四足动物使用
 `quadruped-v1` 并提供显式三维关键点。
 
+MCP 的 `source_id` 可以直接接收已注册的 `asset_` ID 或任务生成的 `artifact_` ID。声明式模型
+应优先使用生成的 `.blend` 产物，以保留对象语义名称。由头部、躯干、左右手臂和左右腿组成的
+六部件方块角色，可以在不重建模型的情况下使用 `coarse-segmented-humanoid-preview` 路线。
+该路线会生成可审阅骨架，但每条粗分段手臂或腿仍是一个刚性组件，刚性绑定后不能在推定的肘部
+或膝部真实弯曲。
+
+没有已注册 JSON 资产时，三维关键点、组件映射、动画坐标和刚性绑定映射都可以直接内联传入。
+几何任务失败时会生成不可变的 `error.json`；应通过 `list_job_artifacts` 和
+`read_json_artifact` 读取，而不是依赖本地私有 worker 日志。
+
 ### 不使用 skin 的生物动画
 
 骨架位置验收后使用 `animate-biological-skeleton`。基于真实模型的固定正面渲染生成每个关键姿势
@@ -160,7 +170,7 @@ source .venv/bin/activate
 python scripts/package_viewforge_plugin.py \
   --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/viewforge-3d-toolkit-0.5.0.zip
+  --output dist/viewforge-3d-toolkit-0.6.1.zip
 ```
 
 ZIP 包含 Apache-2.0 许可证、插件清单、全部技能，以及相互独立的中英文 README、详细指南和

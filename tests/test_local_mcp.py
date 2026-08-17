@@ -166,6 +166,9 @@ def test_mcp_tool_contract_has_focused_annotated_tools(tmp_path: Path) -> None:
     assert by_name["read_image_artifact"].annotations.read_only_hint is True
     assert by_name["generate_pixel_cube"].annotations.open_world_hint is False
     assert by_name["build_biological_skeleton"].annotations.open_world_hint is False
+    skeleton_schema = by_name["build_biological_skeleton"].input_schema
+    assert skeleton_schema["required"] == ["source_id"]
+    assert {"landmarks", "component_map"} <= set(skeleton_schema["properties"])
     schema = by_name["build_declarative_blender_model"].input_schema
     object_schema = schema["$defs"]["DeclarativeModelObject"]
     assert object_schema["properties"]["primitive"]["enum"] == [
@@ -201,6 +204,7 @@ def test_blender_commands_disable_embedded_autoexec(tmp_path: Path) -> None:
 
     assert "--background" in command
     assert "--disable-autoexec" in command
+    assert command[command.index("--python-exit-code") + 1] == "1"
     assert command.count("--python") == 1
 
 
@@ -219,6 +223,7 @@ def test_declarative_blender_command_uses_plugin_owned_script(tmp_path: Path) ->
 
     assert "--factory-startup" in command
     assert "--disable-autoexec" in command
+    assert command[command.index("--python-exit-code") + 1] == "1"
     assert command.count("--python") == 1
     script = Path(command[command.index("--python") + 1]).resolve()
     assert script.is_relative_to(plugin_root.resolve())
@@ -250,6 +255,7 @@ def test_render_blender_command_uses_plugin_owned_script_and_safe_loading(
     assert "--background" in glb_command
     assert "--disable-autoexec" in glb_command
     assert "--factory-startup" in glb_command
+    assert glb_command[glb_command.index("--python-exit-code") + 1] == "1"
     assert glb_command.count("--python") == 1
     script = Path(glb_command[glb_command.index("--python") + 1]).resolve()
     assert script.is_relative_to(plugin_root.resolve())
@@ -269,6 +275,25 @@ def test_render_blender_command_uses_plugin_owned_script_and_safe_loading(
 
     assert "--factory-startup" not in blend_command
     assert blend_command.index(blend_arguments["input"]) < blend_command.index("--python")
+
+
+def test_skeleton_blend_command_loads_source_before_worker_script(tmp_path: Path) -> None:
+    plugin_root = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-toolkit"
+    source = tmp_path / "character.blend"
+    request = JobRequest(
+        schema_version=2,
+        job_id="job_skeleton_blend",
+        kind=JobKind.BUILD_SKELETON.value,
+        blender_executable=sys.executable,
+        plugin_root=str(plugin_root),
+        arguments={"input": str(source), "profile": "humanoid-v1"},
+    )
+
+    command = blender_command(request, tmp_path / "output")
+
+    assert "--factory-startup" not in command
+    assert command.index(str(source)) < command.index("--python")
+    assert command[command.index("--python-exit-code") + 1] == "1"
 
 
 def test_inline_declarative_spec_is_staged_as_immutable_job_input(
@@ -296,6 +321,105 @@ def test_inline_declarative_spec_is_staged_as_immutable_job_input(
     staged = Path(request.arguments["spec"])
     assert staged.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
     assert json.loads(staged.read_text(encoding="utf-8"))["objects"][0]["name"] == "Seat"
+
+
+def test_skeleton_accepts_generated_blend_artifact_and_inline_landmarks(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, _ = configured_runtime(tmp_path)
+    source_job_id = "job_generated_model"
+    source_output = runtime.paths.jobs / source_job_id / "output"
+    source_output.mkdir(parents=True)
+    source = source_output / "declarative-model.blend"
+    source.write_bytes(b"generated blend fixture")
+    source_artifact = runtime.artifacts.register(source_job_id, source)
+    monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))
+
+    class FakeWorker:
+        pid = 4323
+
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.subprocess.Popen",
+        lambda *args, **kwargs: FakeWorker(),
+    )
+    landmarks = {
+        "schemaVersion": 1,
+        "profileId": "humanoid-v1",
+        "landmarks": {"fixture": [0, 0, 0]},
+    }
+
+    summary = runtime.launcher.build_skeleton(
+        source_id=source_artifact.id,
+        profile="humanoid-v1",
+        landmarks=landmarks,
+    )
+
+    request = load_request(Path(runtime.jobs.load(summary.id).request_path))
+    staged_source = Path(request.arguments["input"])
+    staged_landmarks = Path(request.arguments["landmarks"])
+    assert staged_source.suffix == ".blend"
+    assert staged_source.read_bytes() == source.read_bytes()
+    assert json.loads(staged_landmarks.read_text(encoding="utf-8")) == landmarks
+    assert staged_source.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
+    assert staged_landmarks.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
+
+
+@pytest.mark.parametrize(
+    ("kind", "inline_name", "inline_document"),
+    [
+        (
+            "animation",
+            "coordinates",
+            {"schemaVersion": 1, "frames": []},
+        ),
+        (
+            "binding",
+            "mapping",
+            {"schemaVersion": 1, "components": {}},
+        ),
+    ],
+)
+def test_animation_and_binding_accept_inline_json(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    kind: str,
+    inline_name: str,
+    inline_document: dict[str, object],
+) -> None:
+    runtime, workspace = configured_runtime(tmp_path)
+    blend = workspace / "bone-only.blend"
+    skeleton = workspace / "skeleton.json"
+    blend.write_bytes(b"blend fixture")
+    skeleton.write_text("{}", encoding="utf-8")
+    blend_asset = runtime.assets.register(blend.name)
+    skeleton_asset = runtime.assets.register(skeleton.name)
+    monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))
+
+    class FakeWorker:
+        pid = 4324
+
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.subprocess.Popen",
+        lambda *args, **kwargs: FakeWorker(),
+    )
+    if kind == "animation":
+        summary = runtime.launcher.create_animation(
+            input_blend_id=blend_asset.id,
+            skeleton_id=skeleton_asset.id,
+            coordinates=inline_document,
+        )
+    else:
+        summary = runtime.launcher.bind_components(
+            input_blend_id=blend_asset.id,
+            skeleton_id=skeleton_asset.id,
+            mapping=inline_document,
+        )
+
+    request = load_request(Path(runtime.jobs.load(summary.id).request_path))
+    staged = Path(request.arguments[inline_name])
+    assert json.loads(staged.read_text(encoding="utf-8")) == inline_document
+    assert staged.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
 
 
 def test_render_preview_stages_source_and_validates_options(
@@ -378,6 +502,62 @@ def test_read_image_artifact_rejects_non_image(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Only PNG"):
         runtime.resolve_image_artifact(artifact.id)
+
+
+def test_failed_blender_job_emits_readable_sanitized_error_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, _ = configured_runtime(tmp_path)
+    job_id = "job_failed_blender_fixture"
+    job_dir = runtime.paths.jobs / job_id
+    job_dir.mkdir()
+    request_path = job_dir / "request.json"
+    atomic_write_json(
+        request_path,
+        {
+            "schemaVersion": 2,
+            "jobId": job_id,
+            "kind": JobKind.BUILD_SKELETON.value,
+            "runtime": "blender",
+            "blenderExecutable": sys.executable,
+            "pluginRoot": str(
+                Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-toolkit"
+            ),
+            "arguments": {"input": str(job_dir / "source.blend"), "profile": "humanoid-v1"},
+        },
+    )
+    runtime.jobs.save(
+        StoredJob(
+            id=job_id,
+            kind=JobKind.BUILD_SKELETON.value,
+            state=JobState.QUEUED.value,
+            created_at=utc_now(),
+            updated_at=utc_now(),
+            request_path=str(request_path),
+        )
+    )
+    diagnostic_line = f"ValueError: missing neck in {runtime.paths.root}/jobs/private"
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.blender_command",
+        lambda request, output_dir: [
+            sys.executable,
+            "-c",
+            f"import sys; print({diagnostic_line!r}); sys.exit(7)",
+        ],
+    )
+
+    assert run_job(request_path, runtime.paths) == 1
+    completed = runtime.jobs.public_by_id(job_id)
+    error_artifact = next(item for item in completed.artifacts if item.name == "error.json")
+    diagnostic = runtime.resolve_json_artifact(error_artifact.id)
+    serialized = diagnostic.model_dump_json()
+
+    assert completed.state == JobState.FAILED
+    assert "Read the sanitized error.json" in (completed.failure or "")
+    assert diagnostic.document["exitCode"] == 7
+    assert "missing neck" in diagnostic.document["workerLogTail"]
+    assert str(runtime.paths.root) not in serialized
 
 
 def test_non_blender_pixel_cube_job_runs_in_modeling_runtime(tmp_path: Path) -> None:

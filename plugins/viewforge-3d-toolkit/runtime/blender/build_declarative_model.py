@@ -234,6 +234,7 @@ def _primitive(definition: dict[str, Any], name: str) -> bpy.types.Object:
         )
     object_ = bpy.context.object
     object_.name = name
+    object_.data.name = f"{name}_Mesh"
     return object_
 
 

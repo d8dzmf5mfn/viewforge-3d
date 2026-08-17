@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -234,18 +235,25 @@ class JobLauncher:
 
     def build_skeleton(
         self,
-        asset_id: str,
+        source_id: str,
         profile: str,
         landmarks_asset_id: str | None = None,
         component_map_asset_id: str | None = None,
         front_annotation_asset_id: str | None = None,
         side_annotation_asset_id: str | None = None,
+        landmarks: dict[str, Any] | None = None,
+        component_map: dict[str, Any] | None = None,
     ) -> JobSummary:
-        source = self.references.resolve(asset_id, {".glb", ".gltf"})
-        if profile == "quadruped-v1" and landmarks_asset_id is None:
-            raise ValueError("quadruped-v1 requires an explicit 3D landmark JSON asset.")
+        source = self.references.resolve(source_id, {".blend", ".glb", ".gltf"})
+        if landmarks_asset_id is not None and landmarks is not None:
+            raise ValueError("Provide landmarks_asset_id or inline landmarks, not both.")
+        if component_map_asset_id is not None and component_map is not None:
+            raise ValueError("Provide component_map_asset_id or inline component_map, not both.")
+        if profile == "quadruped-v1" and landmarks_asset_id is None and landmarks is None:
+            raise ValueError("quadruped-v1 requires explicit 3D landmark JSON.")
         arguments: dict[str, Any] = {"profile": profile}
         staged = {"input": (source, f"source{source.suffix.lower()}")}
+        inline: dict[str, tuple[dict[str, Any], str]] = {}
         optional = {
             "landmarks": (landmarks_asset_id, {".json"}),
             "component_map": (component_map_asset_id, {".json"}),
@@ -256,19 +264,27 @@ class JobLauncher:
             if reference_id:
                 path = self.references.resolve(reference_id, extensions)
                 staged[key] = (path, f"{key}{path.suffix.lower()}")
+        if landmarks is not None:
+            inline["landmarks"] = (landmarks, "landmarks.json")
+        if component_map is not None:
+            inline["component_map"] = (component_map, "component_map.json")
         return self._create(
             JobKind.BUILD_SKELETON,
             arguments,
             runtime="blender",
             staged_inputs=staged,
+            inline_json_inputs=inline or None,
         )
 
     def create_animation(
         self,
         input_blend_id: str,
         skeleton_id: str,
-        coordinates_asset_id: str,
+        coordinates_asset_id: str | None = None,
+        coordinates: dict[str, Any] | None = None,
     ) -> JobSummary:
+        if (coordinates_asset_id is None) == (coordinates is None):
+            raise ValueError("Provide exactly one of coordinates_asset_id or coordinates.")
         staged = {
             "input_blend": (
                 self.references.resolve(input_blend_id, {".blend"}),
@@ -278,24 +294,32 @@ class JobLauncher:
                 self.references.resolve(skeleton_id, {".json"}),
                 "skeleton.json",
             ),
-            "coordinates": (
+        }
+        inline = None
+        if coordinates_asset_id is not None:
+            staged["coordinates"] = (
                 self.references.resolve(coordinates_asset_id, {".json"}),
                 "coordinates.json",
-            ),
-        }
+            )
+        else:
+            inline = {"coordinates": (coordinates or {}, "coordinates.json")}
         return self._create(
             JobKind.CREATE_BONE_ANIMATION,
             {},
             runtime="blender",
             staged_inputs=staged,
+            inline_json_inputs=inline,
         )
 
     def bind_components(
         self,
         input_blend_id: str,
         skeleton_id: str,
-        mapping_asset_id: str,
+        mapping_asset_id: str | None = None,
+        mapping: dict[str, Any] | None = None,
     ) -> JobSummary:
+        if (mapping_asset_id is None) == (mapping is None):
+            raise ValueError("Provide exactly one of mapping_asset_id or mapping.")
         staged = {
             "input_blend": (
                 self.references.resolve(input_blend_id, {".blend"}),
@@ -305,16 +329,21 @@ class JobLauncher:
                 self.references.resolve(skeleton_id, {".json"}),
                 "skeleton.json",
             ),
-            "mapping": (
+        }
+        inline = None
+        if mapping_asset_id is not None:
+            staged["mapping"] = (
                 self.references.resolve(mapping_asset_id, {".json"}),
                 "mapping.json",
-            ),
-        }
+            )
+        else:
+            inline = {"mapping": (mapping or {}, "mapping.json")}
         return self._create(
             JobKind.BIND_RIGID_COMPONENTS,
             {},
             runtime="blender",
             staged_inputs=staged,
+            inline_json_inputs=inline,
         )
 
     def build_declarative_model(
@@ -586,18 +615,27 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
         command = [
             str(blender),
             "--background",
-            "--factory-startup",
             "--disable-autoexec",
-            "--python",
-            str(script),
-            "--",
-            "--input",
-            request.arguments["input"],
-            "--output-dir",
-            str(output_dir),
-            "--profile",
-            request.arguments["profile"],
         ]
+        if Path(request.arguments["input"]).suffix.lower() == ".blend":
+            command.append(request.arguments["input"])
+        else:
+            command.append("--factory-startup")
+        command.extend(
+            [
+                "--python-exit-code",
+                "1",
+                "--python",
+                str(script),
+                "--",
+                "--input",
+                request.arguments["input"],
+                "--output-dir",
+                str(output_dir),
+                "--profile",
+                request.arguments["profile"],
+            ]
+        )
         for key, option in (
             ("landmarks", "--landmarks"),
             ("component_map", "--component-map"),
@@ -617,6 +655,8 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--background",
             "--disable-autoexec",
             request.arguments["input_blend"],
+            "--python-exit-code",
+            "1",
             "--python",
             str(script),
             "--",
@@ -641,6 +681,8 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--background",
             "--disable-autoexec",
             request.arguments["input_blend"],
+            "--python-exit-code",
+            "1",
             "--python",
             str(script),
             "--",
@@ -662,6 +704,8 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--background",
             "--factory-startup",
             "--disable-autoexec",
+            "--python-exit-code",
+            "1",
             "--python",
             str(script),
             "--",
@@ -687,6 +731,8 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             command.append("--factory-startup")
         command.extend(
             [
+                "--python-exit-code",
+                "1",
                 "--python",
                 str(script),
                 "--",
@@ -836,6 +882,17 @@ def _register_generated(
     return job.artifact_ids
 
 
+def _worker_log_tail(log_path: Path, *, byte_limit: int = 32 * 1024) -> str:
+    if not log_path.is_file():
+        return ""
+    with log_path.open("rb") as handle:
+        size = handle.seek(0, os.SEEK_END)
+        handle.seek(max(0, size - byte_limit))
+        payload = handle.read()
+    text = payload.decode("utf-8", errors="replace")
+    return "\n".join(text.splitlines()[-120:])
+
+
 def run_job(request_path: Path, paths: LocalPaths | None = None) -> int:
     local_paths = paths or LocalPaths()
     local_paths.ensure()
@@ -916,9 +973,26 @@ def run_job(request_path: Path, paths: LocalPaths | None = None) -> int:
         )
         jobs.save(job)
         return 1
-    except Exception:
+    except Exception as error:
+        atomic_write_json(
+            output_dir / "error.json",
+            {
+                "schemaVersion": 1,
+                "kind": "local-geometry-error",
+                "jobId": job.id,
+                "jobKind": request.kind,
+                "errorType": type(error).__name__,
+                "message": str(error),
+                "exitCode": job.exit_code,
+                "workerLogTail": _worker_log_tail(log_path),
+            },
+        )
+        with contextlib.suppress(Exception):
+            _register_generated(job, output_dir, artifacts)
         job.state = JobState.FAILED.value
-        job.status_message = None
-        job.failure = "The local geometry job failed. Check the local worker log."
+        job.status_message = "geometry-worker-failed"
+        job.failure = (
+            "The local geometry job failed. Read the sanitized error.json artifact for details."
+        )
         jobs.save(job)
         return 1

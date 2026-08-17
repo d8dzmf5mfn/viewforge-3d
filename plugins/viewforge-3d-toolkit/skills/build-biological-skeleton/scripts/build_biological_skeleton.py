@@ -247,6 +247,15 @@ HUMANOID_COMPONENT_ROLES = [
     "foot.R",
 ]
 
+COARSE_HUMANOID_COMPONENT_ROLES = [
+    "head",
+    "torso",
+    "arm.L",
+    "arm.R",
+    "leg.L",
+    "leg.R",
+]
+
 
 def resolve_humanoid_components(
     mesh_objects: list[Any], component_map: dict[str, Any] | None
@@ -271,6 +280,30 @@ def resolve_humanoid_components(
         resolved[role] = matches[0]
     if len({obj.name for obj in resolved.values()}) != len(resolved):
         raise ValueError("one source mesh resolved to multiple humanoid component roles")
+    return resolved
+
+
+def object_matches_coarse_role(name: str, role: str) -> bool:
+    tokens = set(normalize_name(name))
+    if role == "head":
+        return bool(tokens & {"head", "skull"})
+    if role == "torso":
+        return bool(tokens & {"torso", "body", "chest"})
+    semantic, side = role.split(".")
+    side_tokens = {"L": {"l", "left"}, "R": {"r", "right"}}[side]
+    return semantic in tokens and bool(tokens & side_tokens)
+
+
+def resolve_coarse_humanoid_components(mesh_objects: list[Any]) -> dict[str, Any]:
+    resolved: dict[str, Any] = {}
+    for role in COARSE_HUMANOID_COMPONENT_ROLES:
+        matches = [obj for obj in mesh_objects if object_matches_coarse_role(obj.name, role)]
+        if len(matches) != 1:
+            names = ", ".join(sorted(obj.name for obj in matches)) or "none"
+            raise ValueError(f"expected one coarse mesh for {role}, found {names}")
+        resolved[role] = matches[0]
+    if len({obj.name for obj in resolved.values()}) != len(resolved):
+        raise ValueError("one source mesh resolved to multiple coarse humanoid roles")
     return resolved
 
 
@@ -403,6 +436,84 @@ def derive_segmented_humanoid_landmarks(
         evidence[f"thigh.{side}"] = [upper.object_name, lower.object_name]
         evidence[f"shin.{side}"] = [upper.object_name, lower.object_name, foot.object_name]
         evidence[f"foot.{side}"] = [lower.object_name, foot.object_name]
+    return {name: vec_tuple(value) for name, value in landmarks.items()}, evidence
+
+
+def _lerp(left: Any, right: Any, factor: float) -> Any:
+    return left + (right - left) * factor
+
+
+def derive_coarse_humanoid_landmarks(
+    components: dict[str, Any]
+) -> tuple[dict[str, tuple[float, float, float]], dict[str, list[str]]]:
+    """Derive a review-only skeleton from six named 3D proxy components.
+
+    The route uses only measured component centers and extents. It is intended for block-character
+    previews whose arms and legs are each one rigid mesh; it does not claim elbow, wrist, knee, or
+    ankle segmentation in the source geometry.
+    """
+    parts = {role: part_from_object(role, obj) for role, obj in components.items()}
+    up = Vector((0.0, 0.0, 1.0))
+    forward = Vector((0.0, 1.0, 0.0))
+    torso = parts["torso"]
+    head = parts["head"]
+    torso_bottom = axis_endpoint(torso, up, positive=False)
+    torso_top = axis_endpoint(torso, up, positive=True)
+    head_bottom = axis_endpoint(head, up, positive=False)
+    head_top = axis_endpoint(head, up, positive=True)
+    landmarks: dict[str, Any] = {
+        "root_lower": _lerp(torso_bottom, torso_top, 0.05),
+        "pelvis": _lerp(torso_bottom, torso_top, 0.22),
+        "spine_mid": _lerp(torso_bottom, torso_top, 0.52),
+        "chest": _lerp(torso_bottom, torso_top, 0.82),
+        "neck_base": (torso_top + head_bottom) * 0.5,
+        "head_top": head_top,
+    }
+    evidence: dict[str, list[str]] = {
+        "root": [torso.object_name],
+        "spine": [torso.object_name],
+        "chest": [torso.object_name],
+        "neck": [torso.object_name, head.object_name],
+        "head": [head.object_name],
+    }
+    for side in ("L", "R"):
+        arm = parts[f"arm.{side}"]
+        arm_direction = normalized(arm.center - torso.center, f"arm.{side}")
+        shoulder = axis_endpoint(arm, arm_direction, positive=False)
+        hand_end = axis_endpoint(arm, arm_direction, positive=True)
+        elbow = _lerp(shoulder, hand_end, 0.5)
+        wrist = _lerp(shoulder, hand_end, 0.84)
+        landmarks.update(
+            {
+                f"shoulder.{side}": shoulder,
+                f"elbow.{side}": elbow,
+                f"wrist.{side}": wrist,
+                f"hand_end.{side}": hand_end,
+            }
+        )
+        evidence[f"clavicle.{side}"] = [torso.object_name, arm.object_name]
+        evidence[f"upper_arm.{side}"] = [arm.object_name]
+        evidence[f"forearm.{side}"] = [arm.object_name]
+        evidence[f"hand.{side}"] = [arm.object_name]
+
+        leg = parts[f"leg.{side}"]
+        hip = axis_endpoint(leg, up, positive=True)
+        sole = axis_endpoint(leg, up, positive=False)
+        knee = _lerp(hip, sole, 0.5)
+        ankle = _lerp(hip, sole, 0.9)
+        toe = ankle + forward * axis_radius(leg, forward)
+        landmarks.update(
+            {
+                f"hip.{side}": hip,
+                f"knee.{side}": knee,
+                f"ankle.{side}": ankle,
+                f"toe.{side}": toe,
+            }
+        )
+        evidence[f"pelvis.{side}"] = [torso.object_name, leg.object_name]
+        evidence[f"thigh.{side}"] = [leg.object_name]
+        evidence[f"shin.{side}"] = [leg.object_name]
+        evidence[f"foot.{side}"] = [leg.object_name]
     return {name: vec_tuple(value) for name, value in landmarks.items()}, evidence
 
 
@@ -643,8 +754,8 @@ def run(arguments: argparse.Namespace) -> dict[str, Any]:
     if bpy is None or Vector is None:
         raise RuntimeError("run this script with Blender Python")
     source = arguments.input.expanduser().resolve()
-    if source.suffix.lower() not in {".glb", ".gltf"} or not source.is_file():
-        raise FileNotFoundError(f"input must be an existing GLB or glTF file: {source}")
+    if source.suffix.lower() not in {".blend", ".glb", ".gltf"} or not source.is_file():
+        raise FileNotFoundError(f"input must be an existing Blend, GLB, or glTF file: {source}")
     output_dir = arguments.output_dir.expanduser().resolve()
     paths = ensure_output_paths(output_dir)
     selected_profile_path = profile_path(arguments.profile)
@@ -653,15 +764,20 @@ def run(arguments: argparse.Namespace) -> dict[str, Any]:
     annotations = annotation_records(arguments)
     source_hash_before = sha256_file(source)
 
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    import_result = bpy.ops.import_scene.gltf(
-        filepath=str(source),
-        import_pack_images=False,
-        import_scene_extras=True,
-        import_select_created_objects=True,
-    )
-    if "FINISHED" not in import_result:
-        raise RuntimeError(f"glTF import failed: {import_result}")
+    if source.suffix.lower() == ".blend":
+        loaded = Path(bpy.data.filepath).resolve() if bpy.data.filepath else None
+        if loaded != source:
+            raise RuntimeError("the requested Blend source was not loaded before the worker script")
+    else:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        import_result = bpy.ops.import_scene.gltf(
+            filepath=str(source),
+            import_pack_images=False,
+            import_scene_extras=True,
+            import_select_created_objects=True,
+        )
+        if "FINISHED" not in import_result:
+            raise RuntimeError(f"glTF import failed: {import_result}")
     scene_objects = list(bpy.context.scene.objects)
     mesh_objects = [obj for obj in scene_objects if obj.type == "MESH"]
     source_empties = [obj for obj in scene_objects if obj.type == "EMPTY"]
@@ -688,9 +804,22 @@ def run(arguments: argparse.Namespace) -> dict[str, Any]:
             if arguments.component_map
             else None
         )
-        components = resolve_humanoid_components(mesh_objects, component_map)
-        landmarks, evidence = derive_segmented_humanoid_landmarks(components)
-        route = "named-segmented-components"
+        try:
+            components = resolve_humanoid_components(mesh_objects, component_map)
+            landmarks, evidence = derive_segmented_humanoid_landmarks(components)
+            route = "named-segmented-components"
+        except ValueError as detailed_error:
+            if component_map is not None:
+                raise
+            try:
+                coarse_components = resolve_coarse_humanoid_components(mesh_objects)
+            except ValueError as coarse_error:
+                raise ValueError(
+                    "humanoid geometry does not satisfy the detailed or coarse component "
+                    f"contracts; detailed: {detailed_error}; coarse: {coarse_error}"
+                ) from coarse_error
+            landmarks, evidence = derive_coarse_humanoid_landmarks(coarse_components)
+            route = "coarse-segmented-humanoid-preview"
     records = bone_records(profile, landmarks)
     armature = create_armature(records, profile, source_hash_before)
     preview_objects, _ = create_preview_geometry(records, scene_diagonal(mesh_objects))
