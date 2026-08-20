@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "name": "verified-stool",
+  "assetType": "furniture",
+  "intent": "A compact four-legged stool built from deterministic primitives.",
+  "coordinateSystem": {
+    "units": "meters",
+    "upAxis": "Z",
+    "handedness": "right"
+  },
+  "construction": {
+    "strategy": "procedural",
+    "capability": "declarative_primitives_v1",
+    "objects": [
+      {
+        "name": "Seat",
+        "semanticRole": "seat",
+        "primitive": "cube",
+        "parameters": {
+          "size": 1.0
+        },
+        "location": [0.0, 0.0, 0.5],
+        "scale": [0.5, 0.5, 0.08],
+        "bevel": {
+          "width": 0.03,
+          "segments": 3
+        }
+      },
+      {
+        "name": "FrontLeftLeg",
+        "semanticRole": "support",
+        "primitive": "cylinder",
+        "parameters": {
+          "vertices": 24,
+          "radius": 0.06,
+          "depth": 0.5
+        },
+        "location": [-0.18, -0.18, 0.25]
+      },
+      {
+        "name": "FrontRightLeg",
+        "semanticRole": "support",
+        "primitive": "cylinder",
+        "parameters": {
+          "vertices": 24,
+          "radius": 0.06,
+          "depth": 0.5
+        },
+        "location": [0.18, -0.18, 0.25]
+      },
+      {
+        "name": "BackLeftLeg",
+        "semanticRole": "support",
+        "primitive": "cylinder",
+        "parameters": {
+          "vertices": 24,
+          "radius": 0.06,
+          "depth": 0.5
+        },
+        "location": [-0.18, 0.18, 0.25]
+      },
+      {
+        "name": "BackRightLeg",
+        "semanticRole": "support",
+        "primitive": "cylinder",
+        "parameters": {
+          "vertices": 24,
+          "radius": 0.06,
+          "depth": 0.5
+        },
+        "location": [0.18, 0.18, 0.25]
+      }
+    ]
+  },
+  "constraints": [
+    {
+      "id": "bounded_height",
+      "kind": "geometry",
+      "metric": "height_m",
+      "operator": "between",
+      "value": [0.45, 0.65],
+      "severity": "error"
+    }
+  ],
+  "validationPolicy": {
+    "minimumMaturity": "validated",
+    "requiredGates": [
+      "finite_geometry",
+      "nonempty_geometry",
+      "glb_parse",
+      "canonical_render",
+      "user_signoff"
+    ]
+  }
+}

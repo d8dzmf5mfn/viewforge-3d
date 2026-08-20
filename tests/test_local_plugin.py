@@ -51,3 +51,20 @@ def test_surface_smoothing_runtime_exists_only_in_local_plugin() -> None:
     )
     assert "$viewforge-3d-local:topology-preserving-smooth" in router
     assert "$viewforge-3d-toolkit:" not in router
+
+
+def test_next_generation_ir_route_exists_only_in_local_plugin() -> None:
+    skill = Path("skills/compile-viewforge-asset/SKILL.md")
+    example = Path("runtime/viewforge-asset-ir-v1.example.json")
+    manifest = _json(LOCAL_PLUGIN / ".codex-plugin" / "plugin.json")
+
+    assert (LOCAL_PLUGIN / skill).is_file()
+    assert (LOCAL_PLUGIN / example).is_file()
+    assert not (CHAT_PLUGIN / skill).exists()
+    assert not (CHAT_PLUGIN / example).exists()
+    assert str(manifest["version"]).startswith("0.2.0+codex.")
+    assert {"IR", "Compile"} <= set(manifest["interface"]["capabilities"])
+    router = (LOCAL_PLUGIN / "skills/viewforge-3d-router/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "$viewforge-3d-local:compile-viewforge-asset" in router

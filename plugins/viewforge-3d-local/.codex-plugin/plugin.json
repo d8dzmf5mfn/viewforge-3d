@@ -1,7 +1,7 @@
 {
   "name": "viewforge-3d-local",
-  "version": "0.1.0+codex.20260820041326",
-  "description": "A separate, local-venv ViewForge 3D workbench for Codex with immutable modeling, rendering, rigging, and topology-preserving surface smoothing tools.",
+  "version": "0.2.0+codex.20260820045023",
+  "description": "A separate local-venv ViewForge 3D workbench with semantic asset IR, capability maturity gates, deterministic compilation, immutable modeling, rendering, rigging, and surface smoothing.",
   "author": {
     "name": "ViewForge 3D Contributors"
   },
@@ -13,18 +13,22 @@
     "local",
     "blender",
     "smoothing",
+    "ir",
+    "verification",
     "modeling",
     "rendering"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "ViewForge 3D Local",
-    "shortDescription": "Run ViewForge from a private local venv, including surface smoothing.",
-    "longDescription": "A side-by-side local edition of ViewForge 3D for Codex. It uses a repository-owned Python 3.11 virtual environment and separate local state, keeps the ChatGPT/Tunnel edition unchanged, exposes immutable modeling and rendering workflows, and adds bounded topology-preserving Blender surface smoothing plus direct local artifact paths.",
+    "shortDescription": "Compile verified 3D intent in a private local ViewForge workbench.",
+    "longDescription": "A side-by-side local edition of ViewForge 3D for Codex. It uses a repository-owned Python 3.11 virtual environment and separate local state, keeps the ChatGPT/Tunnel edition unchanged, validates semantic ViewForge Asset IR against evidence and capability-maturity gates, compiles only allowlisted procedural geometry, and retains immutable modeling, rendering, rigging, bounded surface smoothing, and direct artifact paths.",
     "developerName": "ViewForge 3D Contributors",
     "category": "Creative",
     "capabilities": [
       "Route",
+      "IR",
+      "Compile",
       "Model",
       "Render",
       "Smooth",
@@ -36,6 +40,7 @@
     ],
     "defaultPrompt": [
       "Use $viewforge-3d-local:viewforge-3d-router to choose a private local 3D workflow.",
+      "Use $viewforge-3d-local:compile-viewforge-asset to validate semantic IR before deterministic procedural compilation.",
       "Smooth an approved Blend or GLB with smooth_model_surface, then inspect its QA and render.",
       "Use get_local_artifact_path after a job so local desktop tools can open its output."
     ]

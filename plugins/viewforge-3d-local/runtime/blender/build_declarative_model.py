@@ -23,6 +23,9 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--output-blend", type=Path, required=True)
     parser.add_argument("--output-glb", type=Path, required=True)
     parser.add_argument("--qa", type=Path, required=True)
+    parser.add_argument("--viewforge-ir", type=Path)
+    parser.add_argument("--ir-validation", type=Path)
+    parser.add_argument("--ir-report", type=Path)
     return parser.parse_args(arguments)
 
 
@@ -73,6 +76,48 @@ def _load_spec(path: Path) -> dict[str, Any]:
     if not isinstance(objects, list) or not 1 <= len(objects) <= MAX_OBJECTS:
         raise ValueError(f"objects must contain 1..{MAX_OBJECTS} entries")
     return payload
+
+
+def _canonical_document_sha256(document: dict[str, Any]) -> str:
+    payload = json.dumps(
+        document,
+        ensure_ascii=False,
+        allow_nan=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _load_ir_provenance(
+    arguments: argparse.Namespace,
+    spec: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    paths = (arguments.viewforge_ir, arguments.ir_validation, arguments.ir_report)
+    if not any(paths):
+        return None
+    if not all(paths):
+        raise ValueError("ViewForge IR compilation requires IR, validation, and report paths")
+    ir = json.loads(arguments.viewforge_ir.read_text(encoding="utf-8"))
+    validation = json.loads(arguments.ir_validation.read_text(encoding="utf-8"))
+    if not isinstance(ir, dict) or not isinstance(validation, dict):
+        raise ValueError("ViewForge IR provenance inputs must be JSON objects")
+    if validation.get("valid") is not True:
+        raise ValueError("ViewForge IR validation did not pass")
+    digest = _canonical_document_sha256(ir)
+    if validation.get("ir_sha256") != digest:
+        raise ValueError("ViewForge IR digest does not match the validation report")
+    capability = validation.get("capability")
+    if not isinstance(capability, dict) or capability.get("id") != "declarative_primitives_v1":
+        raise ValueError("ViewForge IR is not admitted by the deterministic primitive compiler")
+    if validation.get("acceptance_state") != "ready_to_compile":
+        raise ValueError("ViewForge IR is not ready to compile")
+    construction = ir.get("construction")
+    if not isinstance(construction, dict) or construction.get("strategy") != "procedural":
+        raise ValueError("ViewForge IR compilation requires the procedural strategy")
+    if any(item.get("primitive") == "mesh" for item in spec["objects"]):
+        raise ValueError("ViewForge IR compilation does not accept raw mesh arrays")
+    return ir, validation
 
 
 def _material(definition: Any, object_name: str) -> bpy.types.Material | None:
@@ -330,6 +375,7 @@ def _bounds(object_: bpy.types.Object) -> list[list[float]]:
 def main() -> None:
     arguments = _arguments()
     spec = _load_spec(arguments.spec.resolve())
+    ir_provenance = _load_ir_provenance(arguments, spec)
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
     for datablocks in (bpy.data.meshes, bpy.data.curves, bpy.data.materials):
@@ -354,8 +400,18 @@ def main() -> None:
     scene["viewforgeSchemaVersion"] = 1
     scene["viewforgeDeclarativeModel"] = True
     scene["viewforgeSourceSpecSha256"] = _sha256(arguments.spec)
+    if ir_provenance is not None:
+        ir, validation = ir_provenance
+        capability = validation["capability"]
+        scene["viewforgeIRSchemaVersion"] = int(ir["schemaVersion"])
+        scene["viewforgeIRSha256"] = validation["ir_sha256"]
+        scene["viewforgeCapability"] = capability["id"]
+        scene["viewforgeCapabilityMaturity"] = capability["maturity"]
 
-    for path in (arguments.output_blend, arguments.output_glb, arguments.qa):
+    output_paths = [arguments.output_blend, arguments.output_glb, arguments.qa]
+    if arguments.ir_report is not None:
+        output_paths.append(arguments.ir_report)
+    for path in output_paths:
         path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(arguments.output_blend.resolve()))
     bpy.ops.export_scene.gltf(
@@ -385,6 +441,38 @@ def main() -> None:
         "blendSha256": _sha256(arguments.output_blend),
         "glbSha256": _sha256(arguments.output_glb),
     }
+    if ir_provenance is not None:
+        ir, validation = ir_provenance
+        capability = validation["capability"]
+        qa["compiledFromViewForgeIR"] = True
+        qa["viewforgeIRSha256"] = validation["ir_sha256"]
+        qa["capability"] = capability["id"]
+        qa["capabilityMaturity"] = capability["maturity"]
+        qa["acceptanceState"] = "needs_model_verification"
+        validation_snapshot = dict(validation)
+        validation_snapshot.pop("normalized_ir", None)
+        ir_report = {
+            "schemaVersion": 1,
+            "sourceIR": ir,
+            "validation": validation_snapshot,
+            "compilation": {
+                "capability": capability["id"],
+                "capabilityMaturity": capability["maturity"],
+                "compiledSpecSha256": _sha256(arguments.spec),
+                "blendSha256": _sha256(arguments.output_blend),
+                "glbSha256": _sha256(arguments.output_glb),
+                "acceptanceState": "needs_model_verification",
+                "requiredNextSteps": [
+                    "inspect_modeling_qa",
+                    "render_canonical_views",
+                    "user_signoff",
+                ],
+            },
+        }
+        arguments.ir_report.write_text(
+            json.dumps(ir_report, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     arguments.qa.write_text(
         json.dumps(qa, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",

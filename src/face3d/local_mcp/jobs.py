@@ -34,6 +34,7 @@ BLENDER_JOB_KINDS = {
     JobKind.CREATE_BONE_ANIMATION,
     JobKind.BIND_RIGID_COMPONENTS,
     JobKind.BUILD_DECLARATIVE_MODEL,
+    JobKind.COMPILE_VIEWFORGE_IR,
     JobKind.RENDER_MODEL_PREVIEW,
     JobKind.SMOOTH_MODEL_SURFACE,
 }
@@ -368,6 +369,24 @@ class JobLauncher:
             runtime="blender",
             staged_inputs=staged,
             inline_json_inputs=inline,
+        )
+
+    def compile_viewforge_ir(
+        self,
+        *,
+        ir: dict[str, Any],
+        validation: dict[str, Any],
+        spec: dict[str, Any],
+    ) -> JobSummary:
+        return self._create(
+            JobKind.COMPILE_VIEWFORGE_IR,
+            {},
+            runtime="blender",
+            inline_json_inputs={
+                "ir": (ir, "viewforge-ir.json"),
+                "ir_validation": (validation, "ir-validation.json"),
+                "spec": (spec, "model-spec.json"),
+            },
         )
 
     def render_model_preview(
@@ -763,9 +782,12 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--qa",
             str(output_dir / "binding-qa.json"),
         ]
-    if request.kind == JobKind.BUILD_DECLARATIVE_MODEL.value:
+    if request.kind in {
+        JobKind.BUILD_DECLARATIVE_MODEL.value,
+        JobKind.COMPILE_VIEWFORGE_IR.value,
+    }:
         script = _script(plugin_root, "runtime/blender/build_declarative_model.py")
-        return [
+        command = [
             str(blender),
             "--background",
             "--factory-startup",
@@ -784,6 +806,18 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
             "--qa",
             str(output_dir / "modeling-qa.json"),
         ]
+        if request.kind == JobKind.COMPILE_VIEWFORGE_IR.value:
+            command.extend(
+                [
+                    "--viewforge-ir",
+                    request.arguments["ir"],
+                    "--ir-validation",
+                    request.arguments["ir_validation"],
+                    "--ir-report",
+                    str(output_dir / "viewforge-ir-report.json"),
+                ]
+            )
+        return command
     if request.kind == JobKind.RENDER_MODEL_PREVIEW.value:
         script = _script(plugin_root, "runtime/blender/render_model_preview.py")
         command = [

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compile ViewForge Asset"
+  short_description: "Validate semantic 3D IR and compile safe local geometry"
+  default_prompt: "Use $viewforge-3d-local:compile-viewforge-asset to validate this asset plan and compile it through the deterministic local IR workflow."

@@ -24,6 +24,7 @@ class JobKind(StrEnum):
     CREATE_BONE_ANIMATION = "create_bone_animation"
     BIND_RIGID_COMPONENTS = "bind_rigid_components"
     BUILD_DECLARATIVE_MODEL = "build_declarative_model"
+    COMPILE_VIEWFORGE_IR = "compile_viewforge_ir"
     RENDER_MODEL_PREVIEW = "render_model_preview"
     SMOOTH_MODEL_SURFACE = "smooth_model_surface"
     GENERATE_PIXEL_CUBE = "generate_pixel_cube"

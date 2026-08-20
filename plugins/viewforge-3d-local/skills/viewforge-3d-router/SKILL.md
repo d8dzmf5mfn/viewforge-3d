@@ -1,6 +1,6 @@
 ---
 name: viewforge-3d-router
-description: "Route ViewForge 3D Local tasks to the correct venv-backed reconstruction, rendering, biological skeleton construction or animation, landmark refinement, annotation lowering, topology-preserving smoothing, Blender polishing, or same-geometry appearance skill. Use when the user asks how to use the separate local plugin or requests an end-to-end local workflow for a person, animal, character, product, or object."
+description: "Route ViewForge 3D Local tasks to semantic IR compilation, venv-backed reconstruction, rendering, biological skeleton construction or animation, landmark refinement, annotation lowering, topology-preserving smoothing, Blender polishing, or same-geometry appearance. Use when the user asks how to use the separate local plugin or requests an end-to-end local workflow for a person, animal, character, product, or object."
 ---
 
 # ViewForge 3D Local router
@@ -13,6 +13,8 @@ user acceptance separate.
 Use the fully qualified name when calling a skill from this plugin:
 
 - `$viewforge-3d-local:reconstruct-3d-from-multiview` — reconstruct or audit source lineage.
+- `$viewforge-3d-local:compile-viewforge-asset` — validate semantic ViewForge IR and compile an
+  allowlisted procedural asset without raw mesh arrays or arbitrary code.
 - `$viewforge-3d-local:render-model-preview` — render immutable fixed-view PNG previews from an
   existing Blend or GLB and return a selected image to the conversation.
 - `$viewforge-3d-local:build-biological-skeleton` — derive and validate a bone-only Armature for
@@ -33,8 +35,11 @@ Use the fully qualified name when calling a skill from this plugin:
 Invoke this router as `$viewforge-3d-local:viewforge-3d-router` when the correct branch is
 unclear or the request spans multiple branches.
 
-This local plugin has two tools that the ChatGPT/Tunnel edition intentionally does not expose:
+This local plugin has these tools that the ChatGPT/Tunnel edition intentionally does not expose:
 
+- `list_viewforge_capabilities` separates trusted, validated, experimental, and planned routes.
+- `validate_viewforge_ir` checks semantic intent, evidence authority, constraints, and gates.
+- `compile_viewforge_ir` lowers only admitted procedural IR to deterministic Blender geometry.
 - `smooth_model_surface` runs the bounded immutable smoothing job from a workspace path or ID.
 - `get_local_artifact_path` returns an exact output path for subsequent local CLI or desktop work.
 
@@ -42,7 +47,8 @@ This local plugin has two tools that the ChatGPT/Tunnel edition intentionally do
 
 1. Establish whether the artifact is a reconstruction, template derivative, preview, or accepted
    geometry derivative.
-2. For a new surface or provenance audit, start with reconstruction.
+2. For an intent-first procedural object, start with the IR compiler. For a new image-derived
+   surface or provenance audit, start with reconstruction.
    For an object, require a dedicated subject profile and read the reconstruction skill's
    `references/object-template-route.md`; do not inherit face landmarks or anatomy assumptions.
 3. For an accepted source needing contour/feature work, use landmark-guided refinement.
@@ -70,7 +76,9 @@ Use this order unless the user narrows it:
 
 ```text
 immutable source
-  -> provenance and route
+  -> semantic intent, provenance, and capability maturity
+  -> ViewForge IR validation when the route supports it
+  -> deterministic compilation or specialized reconstruction
   -> coarse contour and thickness fit
   -> classified feature refinement
   -> optional authorized polish/smooth

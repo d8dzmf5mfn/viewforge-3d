@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import base64
 import contextlib
+import json
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,14 @@ from mcp.types import CallToolResult, ImageContent, TextContent, ToolAnnotations
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from .ir import (
+    MAX_IR_BYTES,
+    CapabilityRegistry,
+    ViewForgeIRValidation,
+    build_capability_registry,
+    lower_procedural_ir,
+    validate_viewforge_ir_document,
+)
 from .jobs import JobLauncher
 from .models import (
     ArtifactList,
@@ -121,7 +130,14 @@ class Runtime:
             if self.edition == "local":
                 capabilities.append("topology_preserving_smoothing")
         if self.edition == "local":
-            capabilities.append("local_artifact_paths")
+            capabilities.extend(
+                [
+                    "local_artifact_paths",
+                    "viewforge_asset_ir",
+                    "capability_maturity_registry",
+                    "deterministic_asset_compiler",
+                ]
+            )
         host = self.endpoint_host or configuration.mcp_host
         port = self.endpoint_port or configuration.mcp_port
         return LocalStatus(
@@ -192,6 +208,73 @@ class Runtime:
         artifact = self.artifacts.get(artifact_id)
         path = self.artifacts.resolve(artifact_id)
         return LocalArtifactLocation(artifact=artifact, path=str(path))
+
+    def capability_registry(self) -> CapabilityRegistry:
+        configuration = self.configuration
+        return build_capability_registry(
+            blender_available=(
+                configuration.blender() is not None
+                and configuration.plugin_root() is not None
+            ),
+            modeling_runtime_available=configuration.modeling_runtime_available(),
+        )
+
+    def _resolve_ir_document(
+        self,
+        *,
+        ir: dict[str, Any] | None,
+        ir_reference_id: str | None,
+    ) -> dict[str, Any]:
+        if (ir is None) == (ir_reference_id is None):
+            raise ValueError("Provide exactly one of ir or ir_reference_id.")
+        if ir is not None:
+            return ir
+        path = self.launcher.references.resolve(ir_reference_id or "", {".json"})
+        if path.stat().st_size > MAX_IR_BYTES:
+            raise ValueError(f"The ViewForge IR exceeds the {MAX_IR_BYTES}-byte limit.")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("The ViewForge IR must be a JSON object.")
+        return payload
+
+    def validate_viewforge_ir(
+        self,
+        *,
+        ir: dict[str, Any] | None,
+        ir_reference_id: str | None,
+    ) -> ViewForgeIRValidation:
+        if self.edition != "local":
+            raise RuntimeError("ViewForge IR is available only in the local edition.")
+        document = self._resolve_ir_document(ir=ir, ir_reference_id=ir_reference_id)
+        _, report = validate_viewforge_ir_document(document, self.capability_registry())
+        return report
+
+    def compile_viewforge_ir(
+        self,
+        *,
+        ir: dict[str, Any] | None,
+        ir_reference_id: str | None,
+    ) -> JobSummary:
+        if self.edition != "local":
+            raise RuntimeError("ViewForge IR compilation is available only in the local edition.")
+        document = self._resolve_ir_document(ir=ir, ir_reference_id=ir_reference_id)
+        parsed, report = validate_viewforge_ir_document(document, self.capability_registry())
+        if parsed is None or not report.valid:
+            details = "; ".join(report.errors[:8]) or "unknown validation failure"
+            raise ValueError(f"ViewForge IR validation failed: {details}")
+        if report.acceptance_state != "ready_to_compile":
+            raise ValueError(
+                "This IR is not eligible for the deterministic compiler; use its specialized "
+                "tool or wait until the capability is implemented."
+            )
+        if report.capability is None or not report.capability.available:
+            raise RuntimeError("The deterministic local Blender compiler is unavailable.")
+        spec = lower_procedural_ir(parsed)
+        return self.launcher.compile_viewforge_ir(
+            ir=report.normalized_ir or {},
+            validation=report.model_dump(by_alias=True, exclude_none=True, mode="json"),
+            spec=spec.model_dump(by_alias=True, exclude_none=True, mode="json"),
+        )
 
     def inspect_modeling_profile(self, config_asset_id: str) -> ModelingProfileStatus:
         if not self.configuration.modeling_runtime_available():
@@ -264,7 +347,8 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
             "render-preview-sheet.png artifact ID to inspect the result."
             + (
                 " This is the separate local edition: it may accept workspace paths, expose "
-                "local artifact paths, and run the bounded smooth_model_surface job."
+                "local artifact paths, validate semantic ViewForge IR, compile only allowlisted "
+                "procedural IR, and run the bounded smooth_model_surface job."
                 if is_local_edition
                 else ""
             )
@@ -470,6 +554,56 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         )
 
     if is_local_edition:
+
+        @server.tool(
+            name="list_viewforge_capabilities",
+            title="List local 3D capability maturity",
+            description=(
+                "Use this before choosing a next-generation local 3D route. It distinguishes "
+                "trusted, validated, experimental, and planned capabilities and marks visual "
+                "hull reconstruction as preview-only."
+            ),
+            annotations=READ_ONLY,
+            structured_output=True,
+        )
+        def list_viewforge_capabilities() -> CapabilityRegistry:
+            return local.capability_registry()
+
+        @server.tool(
+            name="validate_viewforge_ir",
+            title="Validate semantic ViewForge asset IR",
+            description=(
+                "Use this local-only read before geometry generation. Supply inline IR or a "
+                "registered JSON reference. It validates semantic intent, evidence authority, "
+                "constraints, acceptance gates, capability maturity, and compilation eligibility "
+                "without executing geometry."
+            ),
+            annotations=READ_ONLY,
+            structured_output=True,
+        )
+        def validate_viewforge_ir(
+            ir: dict[str, Any] | None = None,
+            ir_reference_id: str | None = None,
+        ) -> ViewForgeIRValidation:
+            return local.validate_viewforge_ir(ir=ir, ir_reference_id=ir_reference_id)
+
+        @server.tool(
+            name="compile_viewforge_ir",
+            title="Compile validated ViewForge asset IR",
+            description=(
+                "Use this local-only write after validate_viewforge_ir returns ready_to_compile. "
+                "It lowers only allowlisted procedural primitives to the deterministic Blender "
+                "compiler, rejects raw mesh arrays and arbitrary code, and emits immutable "
+                "Blend/GLB/QA/IR provenance artifacts."
+            ),
+            annotations=LOCAL_WRITE,
+            structured_output=True,
+        )
+        def compile_viewforge_ir(
+            ir: dict[str, Any] | None = None,
+            ir_reference_id: str | None = None,
+        ) -> JobSummary:
+            return local.compile_viewforge_ir(ir=ir, ir_reference_id=ir_reference_id)
 
         @server.tool(
             name="smooth_model_surface",

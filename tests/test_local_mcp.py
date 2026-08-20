@@ -10,6 +10,11 @@ import pytest
 from mcp.types import ImageContent
 from PIL import Image
 
+from face3d.local_mcp.ir import (
+    build_capability_registry,
+    lower_procedural_ir,
+    validate_viewforge_ir_document,
+)
 from face3d.local_mcp.jobs import JobRequest, blender_command, load_request, run_job
 from face3d.local_mcp.models import AssetKind, JobKind, JobState
 from face3d.local_mcp.rendering import compose_preview_sheet
@@ -41,6 +46,72 @@ def configured_runtime(tmp_path: Path) -> tuple[Runtime, Path]:
         )
     )
     return Runtime(paths), workspace
+
+
+def procedural_ir() -> dict[str, object]:
+    return {
+        "schemaVersion": 1,
+        "name": "verified-stool",
+        "assetType": "furniture",
+        "intent": "A compact four-legged stool built from deterministic primitives.",
+        "coordinateSystem": {
+            "units": "meters",
+            "upAxis": "Z",
+            "handedness": "right",
+        },
+        "construction": {
+            "strategy": "procedural",
+            "capability": "declarative_primitives_v1",
+            "objects": [
+                {
+                    "name": "Seat",
+                    "semanticRole": "seat",
+                    "primitive": "cube",
+                    "parameters": {"size": 1.0},
+                    "location": [0.0, 0.0, 0.5],
+                    "scale": [0.5, 0.5, 0.08],
+                    "bevel": {"width": 0.03, "segments": 3},
+                },
+                {
+                    "name": "FrontLeftLeg",
+                    "semanticRole": "support",
+                    "primitive": "cylinder",
+                    "parameters": {"vertices": 24, "radius": 0.06, "depth": 0.5},
+                    "location": [-0.18, -0.18, 0.25],
+                },
+                {
+                    "name": "FrontRightLeg",
+                    "semanticRole": "support",
+                    "primitive": "cylinder",
+                    "parameters": {"vertices": 24, "radius": 0.06, "depth": 0.5},
+                    "location": [0.18, -0.18, 0.25],
+                },
+                {
+                    "name": "BackLeftLeg",
+                    "semanticRole": "support",
+                    "primitive": "cylinder",
+                    "parameters": {"vertices": 24, "radius": 0.06, "depth": 0.5},
+                    "location": [-0.18, 0.18, 0.25],
+                },
+                {
+                    "name": "BackRightLeg",
+                    "semanticRole": "support",
+                    "primitive": "cylinder",
+                    "parameters": {"vertices": 24, "radius": 0.06, "depth": 0.5},
+                    "location": [0.18, 0.18, 0.25],
+                },
+            ],
+        },
+        "constraints": [
+            {
+                "id": "bounded_height",
+                "kind": "geometry",
+                "metric": "height_m",
+                "operator": "between",
+                "value": [0.45, 0.65],
+            }
+        ],
+    }
 
 
 def test_asset_registration_stays_inside_workspace_and_hides_path(tmp_path: Path) -> None:
@@ -195,11 +266,15 @@ def test_local_edition_adds_only_local_workbench_tools(tmp_path: Path) -> None:
     local_names = {tool.name for tool in local_tools}
 
     assert local_names == chat_names | {
+        "list_viewforge_capabilities",
+        "validate_viewforge_ir",
+        "compile_viewforge_ir",
         "smooth_model_surface",
         "get_local_artifact_path",
     }
     assert "smooth_model_surface" not in chat_names
     assert "get_local_artifact_path" not in chat_names
+    assert "compile_viewforge_ir" not in chat_names
     local_by_name = {tool.name: tool for tool in local_tools}
     smooth_schema = local_by_name["smooth_model_surface"].input_schema
     assert smooth_schema["required"] == ["source"]
@@ -208,6 +283,200 @@ def test_local_edition_adds_only_local_workbench_tools(tmp_path: Path) -> None:
     status = local_runtime.status()
     assert status.edition == "local"
     assert "topology_preserving_smoothing" in status.capabilities
+    assert "viewforge_asset_ir" in status.capabilities
+    assert "deterministic_asset_compiler" in status.capabilities
+
+
+def test_viewforge_ir_validation_and_lowering_are_deterministic() -> None:
+    registry = build_capability_registry(
+        blender_available=True,
+        modeling_runtime_available=True,
+    )
+
+    parsed, report = validate_viewforge_ir_document(procedural_ir(), registry)
+    parsed_again, report_again = validate_viewforge_ir_document(procedural_ir(), registry)
+
+    assert parsed is not None
+    assert parsed_again is not None
+    assert report.valid is True
+    assert report.acceptance_state == "ready_to_compile"
+    assert report.ir_sha256 == report_again.ir_sha256
+    assert report.capability is not None
+    assert report.capability.maturity == "validated"
+    spec = lower_procedural_ir(parsed).model_dump(by_alias=True, exclude_none=True)
+    assert spec["schemaVersion"] == 1
+    assert [item["primitive"] for item in spec["objects"]] == [
+        "cube",
+        "cylinder",
+        "cylinder",
+        "cylinder",
+        "cylinder",
+    ]
+    assert all(
+        "vertices" not in item or item["primitive"] == "cylinder" for item in spec["objects"]
+    )
+    assert all("faces" not in item for item in spec["objects"])
+
+
+def test_viewforge_ir_rejects_raw_mesh_and_missing_acceptance_gates() -> None:
+    registry = build_capability_registry(
+        blender_available=True,
+        modeling_runtime_available=True,
+    )
+    raw_mesh = procedural_ir()
+    raw_mesh["construction"]["objects"][0] = {
+        "name": "UnsafeMesh",
+        "primitive": "mesh",
+        "vertices": [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+        "faces": [[0, 1, 2]],
+    }
+
+    parsed, report = validate_viewforge_ir_document(raw_mesh, registry)
+
+    assert parsed is None
+    assert report.valid is False
+    assert report.acceptance_state == "rejected"
+    assert any("primitive" in message or "extra" in message for message in report.errors)
+
+    missing_gates = procedural_ir()
+    missing_gates["validationPolicy"] = {"requiredGates": ["finite_geometry"]}
+    parsed, report = validate_viewforge_ir_document(missing_gates, registry)
+
+    assert parsed is not None
+    assert report.valid is False
+    assert any("mandatory gates" in message for message in report.errors)
+
+
+def test_viewforge_ir_accepts_camel_case_parameters_and_rejects_booleans() -> None:
+    registry = build_capability_registry(
+        blender_available=True,
+        modeling_runtime_available=True,
+    )
+    torus = procedural_ir()
+    torus["construction"]["objects"][0] = {
+        "name": "Ring",
+        "primitive": "torus",
+        "parameters": {
+            "majorSegments": 48,
+            "minorSegments": 16,
+            "majorRadius": 0.5,
+            "minorRadius": 0.1,
+        },
+    }
+
+    parsed, report = validate_viewforge_ir_document(torus, registry)
+
+    assert parsed is not None
+    assert report.valid is True
+
+    invalid = procedural_ir()
+    invalid["construction"]["objects"][0]["parameters"]["size"] = True
+    parsed, report = validate_viewforge_ir_document(invalid, registry)
+
+    assert parsed is None
+    assert report.valid is False
+    assert any("valid number" in message or "valid integer" in message for message in report.errors)
+
+
+def test_viewforge_ir_keeps_visual_hull_preview_only() -> None:
+    registry = build_capability_registry(
+        blender_available=True,
+        modeling_runtime_available=True,
+    )
+    document = procedural_ir()
+    document["construction"] = {
+        "strategy": "multiview",
+        "capability": "six_view_visual_hull_v1",
+    }
+    document["evidence"] = [
+        {
+            "role": role,
+            "sourceId": f"asset_{index:08x}",
+            "authority": "observed",
+            "confidence": 1.0,
+        }
+        for index, role in enumerate(["front", "back", "left", "right", "top", "bottom"])
+    ]
+    document["validationPolicy"] = {
+        "minimumMaturity": "experimental",
+        "requiredGates": [
+            "finite_geometry",
+            "nonempty_geometry",
+            "glb_parse",
+            "canonical_render",
+            "user_signoff",
+        ],
+    }
+
+    parsed, report = validate_viewforge_ir_document(document, registry)
+
+    assert parsed is not None
+    assert report.valid is True
+    assert report.acceptance_state == "preview_only"
+    assert report.capability is not None
+    assert report.capability.preview_only is True
+
+
+def test_compile_viewforge_ir_stages_normalized_contract_and_spec(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    chat_runtime, _ = configured_runtime(tmp_path)
+    runtime = Runtime(chat_runtime.paths, edition="local")
+    local_plugin = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"
+    monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))
+    monkeypatch.setattr(runtime.configuration, "plugin_root", lambda: local_plugin)
+
+    class FakeWorker:
+        pid = 4326
+
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.subprocess.Popen",
+        lambda *args, **kwargs: FakeWorker(),
+    )
+
+    summary = runtime.compile_viewforge_ir(ir=procedural_ir(), ir_reference_id=None)
+
+    assert summary.kind == JobKind.COMPILE_VIEWFORGE_IR
+    request = load_request(Path(runtime.jobs.load(summary.id).request_path))
+    assert request.kind == JobKind.COMPILE_VIEWFORGE_IR.value
+    staged_ir = json.loads(Path(request.arguments["ir"]).read_text(encoding="utf-8"))
+    staged_validation = json.loads(
+        Path(request.arguments["ir_validation"]).read_text(encoding="utf-8")
+    )
+    staged_spec = json.loads(Path(request.arguments["spec"]).read_text(encoding="utf-8"))
+    assert staged_ir["schemaVersion"] == 1
+    assert staged_validation["valid"] is True
+    assert staged_validation["acceptance_state"] == "ready_to_compile"
+    assert staged_spec["schemaVersion"] == 1
+    assert all(item["primitive"] != "mesh" for item in staged_spec["objects"])
+    assert all("faces" not in item for item in staged_spec["objects"])
+
+
+def test_compile_viewforge_ir_blender_command_records_ir_provenance(tmp_path: Path) -> None:
+    plugin_root = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"
+    request = JobRequest(
+        schema_version=2,
+        job_id="job_ir_compile",
+        kind=JobKind.COMPILE_VIEWFORGE_IR.value,
+        blender_executable=sys.executable,
+        plugin_root=str(plugin_root),
+        arguments={
+            "spec": str(tmp_path / "model-spec.json"),
+            "ir": str(tmp_path / "viewforge-ir.json"),
+            "ir_validation": str(tmp_path / "ir-validation.json"),
+        },
+    )
+
+    command = blender_command(request, tmp_path / "output")
+
+    assert "--factory-startup" in command
+    assert "--viewforge-ir" in command
+    assert command[command.index("--viewforge-ir") + 1] == request.arguments["ir"]
+    assert "--ir-validation" in command
+    assert "--ir-report" in command
+    script = Path(command[command.index("--python") + 1]).resolve()
+    assert script == (plugin_root / "runtime/blender/build_declarative_model.py").resolve()
 
 
 def test_local_artifact_path_is_not_available_to_chat_edition(tmp_path: Path) -> None:
@@ -541,9 +810,7 @@ def test_surface_smooth_accepts_workspace_path_and_stages_options(
         LocalConfiguration(
             workspace_root=configuration.workspace_root,
             blender_executable=configuration.blender_executable,
-            plugin_root=str(
-                Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"
-            ),
+            plugin_root=str(Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"),
         )
     )
     monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))

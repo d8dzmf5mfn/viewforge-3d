@@ -11,7 +11,7 @@
 | Transport | App/Tunnel capable | Local stdio only |
 | Python | Bundled app runtime with compatibility fallback | Repository `.venv/bin/python` only |
 | State | `ViewForge Local` application state | `ViewForge 3D Local Plugin` state |
-| Extra tools | None | `smooth_model_surface`, `get_local_artifact_path` |
+| Extra tools | None | semantic IR, capability maturity, deterministic compile, smoothing, local paths |
 
 The local edition does not configure or use a Tunnel, remote URL, control-plane key, or OpenAI API
 key. Its setup script validates the existing Python 3.11 `.venv` and records the repository root in
@@ -38,6 +38,29 @@ codex plugin add viewforge-3d-local@viewforge-3d
 ```
 
 Start a new Codex task after installation or a plugin cachebuster update.
+
+## Next local architecture: IR before GLB
+
+The local edition now treats GLB as a validated output container rather than an AI reasoning
+format. Its first next-generation milestone adds:
+
+- `list_viewforge_capabilities` — reports capability maturity, availability, and preview-only
+  boundaries.
+- `validate_viewforge_ir` — validates schema version 1 semantic intent, evidence authority,
+  constraints, mandatory acceptance gates, and the selected capability.
+- `compile_viewforge_ir` — lowers only `declarative_primitives_v1` IR to the existing deterministic
+  Blender compiler and emits IR provenance beside Blend, GLB, and modeling QA.
+
+Raw vertices, faces, buffers, byte offsets, Python, and Blender scripts are outside this IR route.
+Six-view visual hull stays experimental and preview-only. `parametric_template_fit_v1` is recorded
+as planned work so the runtime fails closed instead of pretending that visual-hull geometry is a
+canonical human or face template.
+
+Compilation success produces `needs_model_verification`: canonical rendering and user signoff are
+still mandatory.
+
+The staged six-view template-fitting design and acceptance model are documented in
+[NEXT_LOCAL_ARCHITECTURE.md](NEXT_LOCAL_ARCHITECTURE.md).
 
 ## Surface smoothing
 
