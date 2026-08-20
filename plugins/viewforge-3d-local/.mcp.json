@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "viewforge-local-workbench": {
+      "cwd": ".",
+      "command": "./bin/viewforge-local-workbench",
+      "args": []
+    }
+  }
+}

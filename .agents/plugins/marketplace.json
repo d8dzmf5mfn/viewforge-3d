@@ -15,6 +15,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Creative"
+    },
+    {
+      "name": "viewforge-3d-local",
+      "source": {
+        "source": "local",
+        "path": "./plugins/viewforge-3d-local"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Creative"
     }
   ]
 }

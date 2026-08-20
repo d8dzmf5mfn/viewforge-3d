@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multiview 2D to 3D Reconstruction"
+  short_description: "Template fitting, anime lofts, and continuous feature joins"
+  default_prompt: "Use $reconstruct-3d-from-multiview to reconstruct or refine this asset, including any mirrored attached features, with explicit provenance and fail-closed geometry gates."

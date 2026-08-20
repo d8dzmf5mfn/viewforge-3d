@@ -10,6 +10,7 @@ ViewForge 3D 是一个 Codex 插件和 Python 工作区，用于根据给定的�
 
 [最新 Release](https://github.com/d8dzmf5mfn/viewforge-3d/releases/latest) ·
 [安装与使用](docs/GUIDE.zh-CN.md) · [Python 环境](docs/VIRTUAL_ENVIRONMENT.zh-CN.md) ·
+[独立 Codex 本地插件](docs/LOCAL_PLUGIN.zh-CN.md) ·
 [ViewForge Local、Tunnel 与 API Key](local-app/USER_SETUP.zh-CN.md)
 
 ![iPhone 17 官方二维证据与 ViewForge 几何预览对比](docs/assets/iphone17-evidence-vs-geometry-preview.png)
@@ -67,6 +68,10 @@ codex plugin add viewforge-3d-toolkit@viewforge-3d
 Mode 或其他设备访问本地几何运行时，请按照
 [ViewForge Local 安装、Tunnel 与 API Key 指南](local-app/USER_SETUP.zh-CN.md)操作。
 
+本机 Codex 请改用独立的 `viewforge-3d-local` 插件。它通过 stdio 直接使用仓库 `.venv`，由插件
+自己在本地定位文件中记录仓库路径，不需要 Tunnel、URL 或 API Key。参见
+[本地插件指南](docs/LOCAL_PLUGIN.zh-CN.md)。
+
 ## 工作方式
 
 1. **锁定证据** — 清点给定视图、哈希、主体配置和每个来源的证据权限。
@@ -79,6 +84,7 @@ Mode 或其他设备访问本地几何运行时，请按照
 ## 仓库结构
 
 - `plugins/viewforge-3d-toolkit/` — 可分发的 Codex 插件源码。
+- `plugins/viewforge-3d-local/` — 独立的 `.venv` 本地插件与平滑工具。
 - `.agents/plugins/marketplace.json` — 仓库本地 Codex marketplace 清单。
 - `LICENSE` — 适用于仓库代码和插件分发内容的 Apache License 2.0 条款。
 - `src/face3d/` — Python 几何和验证实现。
@@ -88,6 +94,7 @@ Mode 或其他设备访问本地几何运行时，请按照
 - `local-app/` — 私有 macOS MCP 宿主及其构建、连接指南。
 - `docs/GUIDE.zh-CN.md` — 详细安装和技能调用指南。
 - `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — 隔离 Python 环境配置指南。
+- `docs/LOCAL_PLUGIN.zh-CN.md` — 双版本隔离、路径定位和无 Tunnel 本地设置。
 - 英文文档分别位于 `README.md`、`docs/GUIDE.md` 和 `docs/VIRTUAL_ENVIRONMENT.md`。
 
 ## 边界

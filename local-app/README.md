@@ -17,7 +17,11 @@ The UI follows the system language by default and also offers explicit Chinese a
 
 The server accepts only files inside the workspace selected in the app. Tool results normally use
 opaque asset, job, and artifact IDs; `read_image_artifact` can return one explicitly selected
-rendered image to the conversation. Absolute local paths stay in the local state store and logs.
+rendered image to the conversation. Generated `artifact_` IDs can be passed directly into later
+skeleton, animation, binding, and rendering jobs; they do not need to be copied into the local
+asset registry. JSON control documents may also be supplied inline. Failed geometry jobs publish a
+sanitized `error.json` artifact for `read_json_artifact`. Absolute local paths stay in the local
+state store and logs.
 
 ## Install and connect
 

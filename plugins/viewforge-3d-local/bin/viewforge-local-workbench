@@ -1,0 +1,36 @@
+#!/bin/zsh
+set -euo pipefail
+
+SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "$0")" && pwd -P)"
+PLUGIN_ROOT="$(cd -- "$SCRIPT_DIRECTORY/.." && pwd -P)"
+RUNTIME_HOME="${VIEWFORGE_LOCAL_RUNTIME_HOME:-$HOME/Library/Application Support/ViewForge 3D Local Plugin}"
+LOCATOR="$RUNTIME_HOME/repository-root"
+
+if [[ ! -r "$LOCATOR" ]]; then
+  echo "ViewForge 3D Local is not configured. Run scripts/setup-local-runtime.sh from its source checkout." >&2
+  exit 78
+fi
+
+IFS= read -r CONFIGURED_REPOSITORY < "$LOCATOR"
+if [[ -z "$CONFIGURED_REPOSITORY" || ! -d "$CONFIGURED_REPOSITORY" ]]; then
+  echo "The configured ViewForge repository is unavailable. Re-run setup-local-runtime.sh." >&2
+  exit 78
+fi
+
+REPOSITORY_ROOT="$(cd -- "$CONFIGURED_REPOSITORY" && pwd -P)"
+PYTHON="$REPOSITORY_ROOT/.venv/bin/python"
+SOURCE_ROOT="$REPOSITORY_ROOT/src"
+if [[ ! -x "$PYTHON" || ! -f "$SOURCE_ROOT/face3d/local_mcp/server.py" ]]; then
+  echo "The ViewForge repository .venv or source tree is incomplete. Rebuild .venv and re-run setup." >&2
+  exit 78
+fi
+
+export VIEWFORGE_EDITION="local"
+export VIEWFORGE_PLUGIN_ROOT="$PLUGIN_ROOT"
+export VIEWFORGE_LOCAL_STATE_DIR="${VIEWFORGE_LOCAL_STATE_DIR:-$RUNTIME_HOME/state}"
+export VIEWFORGE_WORKSPACE_ROOT="${VIEWFORGE_WORKSPACE_ROOT:-$REPOSITORY_ROOT}"
+export PYTHONPATH="$SOURCE_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONNOUSERSITE=1
+export PYTHONDONTWRITEBYTECODE=1
+
+exec "$PYTHON" -m face3d.local_mcp.server --edition local --transport stdio "$@"

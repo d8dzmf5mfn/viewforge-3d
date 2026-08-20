@@ -96,6 +96,18 @@ landmarks. The output must contain no weights, Armature modifiers, mesh parentin
 Use `humanoid-v1` for people and humanoids; use `quadruped-v1` with explicit 3D landmarks for
 four-legged animals.
 
+The MCP `source_id` accepts either a registered `asset_` ID or a generated `artifact_` ID. For a
+declarative model, prefer its generated `.blend` artifact so semantic object names are preserved.
+A six-part block proxy named as head, torso, left/right arm, and left/right leg can use the
+`coarse-segmented-humanoid-preview` route without rebuilding the model. This produces a reviewable
+bone layout, but each coarse arm or leg remains one rigid component and cannot bend at inferred
+elbows or knees during rigid binding.
+
+Landmarks, component maps, animation coordinates, and rigid-binding maps may be supplied inline
+when no registered JSON asset exists. A failed geometry job emits an immutable `error.json`;
+retrieve it with `list_job_artifacts` and `read_json_artifact` instead of relying on private worker
+logs.
+
 ### Biological animation without skin
 
 Use `animate-biological-skeleton` after the bone-only Armature is accepted. Generate each key pose
@@ -167,7 +179,7 @@ source .venv/bin/activate
 python scripts/package_viewforge_plugin.py \
   --plugin plugins/viewforge-3d-toolkit \
   --repository-root . \
-  --output dist/viewforge-3d-toolkit-0.5.0.zip
+  --output dist/viewforge-3d-toolkit-0.6.1.zip
 ```
 
 The ZIP contains the Apache-2.0 license, plugin manifest, all skills, and separate English and

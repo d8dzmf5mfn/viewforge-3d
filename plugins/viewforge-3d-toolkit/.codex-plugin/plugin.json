@@ -1,6 +1,6 @@
 {
   "name": "viewforge-3d-toolkit",
-  "version": "0.6.0+codex.20260816132353",
+  "version": "0.6.1+codex.20260817012533",
   "description": "Quality-gated local geometry generation, multi-view 3D construction, controlled Blender modeling and rendering, biological skeleton animation, no-skin rigid binding, mesh refinement, and same-geometry appearance skills.",
   "author": {
     "name": "ViewForge 3D Contributors"

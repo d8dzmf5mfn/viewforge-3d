@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Manual Polish"
+  short_description: "Safely polish local mesh defects in Blender"
+  default_prompt: "Use $blender-manual-polish to guide a topology-safe local polish on this GLB."

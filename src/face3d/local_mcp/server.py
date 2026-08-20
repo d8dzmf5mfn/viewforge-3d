@@ -20,6 +20,7 @@ from .models import (
     JobList,
     JobSummary,
     JSONArtifact,
+    LocalArtifactLocation,
     LocalStatus,
     ModelingAssetState,
     ModelingProfileStatus,
@@ -27,6 +28,7 @@ from .models import (
     RenderMaterialMode,
     RenderView,
     SkeletonProfile,
+    ViewForgeEdition,
 )
 from .storage import (
     SERVER_VERSION,
@@ -70,10 +72,12 @@ class Runtime:
         paths: LocalPaths | None = None,
         endpoint_host: str | None = None,
         endpoint_port: int | None = None,
+        edition: ViewForgeEdition = "chat",
     ) -> None:
         self.paths = paths or LocalPaths()
         self.endpoint_host = endpoint_host
         self.endpoint_port = endpoint_port
+        self.edition = edition
         self.paths.ensure()
         self.configuration = ConfigurationStore(self.paths)
         self.assets = AssetStore(self.paths, self.configuration)
@@ -114,10 +118,15 @@ class Runtime:
                     "rigid_binding",
                 ]
             )
+            if self.edition == "local":
+                capabilities.append("topology_preserving_smoothing")
+        if self.edition == "local":
+            capabilities.append("local_artifact_paths")
         host = self.endpoint_host or configuration.mcp_host
         port = self.endpoint_port or configuration.mcp_port
         return LocalStatus(
             ready=ready,
+            edition=self.edition,
             server_version=SERVER_VERSION,
             workspace_configured=workspace is not None,
             blender_available=blender is not None,
@@ -177,6 +186,13 @@ class Runtime:
             ]
         )
 
+    def resolve_local_artifact_path(self, artifact_id: str) -> LocalArtifactLocation:
+        if self.edition != "local":
+            raise RuntimeError("Local artifact paths are available only in the local edition.")
+        artifact = self.artifacts.get(artifact_id)
+        path = self.artifacts.resolve(artifact_id)
+        return LocalArtifactLocation(artifact=artifact, path=str(path))
+
     def inspect_modeling_profile(self, config_asset_id: str) -> ModelingProfileStatus:
         if not self.configuration.modeling_runtime_available():
             raise RuntimeError("The ViewForge modeling runtime is unavailable.")
@@ -226,11 +242,16 @@ def _sanitize_document(value: Any, roots: list[Path]) -> Any:
 
 def create_server(runtime: Runtime | None = None) -> MCPServer:
     local = runtime or Runtime()
+    is_local_edition = local.edition == "local"
     server = MCPServer(
-        name="viewforge-local",
-        title="ViewForge Local",
+        name="viewforge-local-workbench" if is_local_edition else "viewforge-local",
+        title="ViewForge 3D Local" if is_local_edition else "ViewForge Local",
         description=(
-            "Local-only multiview reconstruction, declarative modeling, model rendering, "
+            "Local venv-backed 3D workbench with multiview reconstruction, declarative modeling, "
+            "rendering, topology-preserving smoothing, biological skeleton, animation, and "
+            "rigid-binding tools."
+            if is_local_edition
+            else "Local-only multiview reconstruction, declarative modeling, model rendering, "
             "biological skeleton, animation, and rigid-binding tools."
         ),
         version=SERVER_VERSION,
@@ -241,6 +262,12 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
             "Call get_viewforge_job until a queued or running job reaches succeeded, failed, or "
             "review_required. After a render job succeeds, call read_image_artifact with the "
             "render-preview-sheet.png artifact ID to inspect the result."
+            + (
+                " This is the separate local edition: it may accept workspace paths, expose "
+                "local artifact paths, and run the bounded smooth_model_surface job."
+                if is_local_edition
+                else ""
+            )
         ),
     )
 
@@ -257,6 +284,7 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
                 "modelingRuntimeAvailable": status.modeling_runtime_available,
                 "blenderToolsAvailable": status.blender_tools_available,
                 "capabilities": status.capabilities,
+                "edition": status.edition,
             }
         )
 
@@ -297,27 +325,33 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         name="build_biological_skeleton",
         title="Build biological skeleton",
         description=(
-            "Use this when an approved GLB or glTF asset needs an immutable bone-only humanoid "
-            "or quadruped Armature with QA artifacts."
+            "Use this when an approved Blend, GLB, or glTF source needs an immutable bone-only "
+            "humanoid or quadruped Armature with QA artifacts. source_id accepts either an "
+            "asset_ ID or a generated artifact_ ID. Inline landmarks and component maps are "
+            "accepted when no registered JSON reference exists."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
     )
     def build_biological_skeleton(
-        asset_id: str,
+        source_id: str,
         profile: SkeletonProfile = "humanoid-v1",
         landmarks_asset_id: str | None = None,
         component_map_asset_id: str | None = None,
         front_annotation_asset_id: str | None = None,
         side_annotation_asset_id: str | None = None,
+        landmarks: dict[str, Any] | None = None,
+        component_map: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.build_skeleton(
-            asset_id=asset_id,
+            source_id=source_id,
             profile=profile,
             landmarks_asset_id=landmarks_asset_id,
             component_map_asset_id=component_map_asset_id,
             front_annotation_asset_id=front_annotation_asset_id,
             side_annotation_asset_id=side_annotation_asset_id,
+            landmarks=landmarks,
+            component_map=component_map,
         )
 
     @server.tool(
@@ -325,7 +359,8 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         title="Create bone animation",
         description=(
             "Use this when a bone-only Blend and matching skeleton/relative-coordinate documents "
-            "need a new immutable Blender Action."
+            "need a new immutable Blender Action. Blend and skeleton inputs accept asset_ or "
+            "artifact_ IDs; coordinates may be a JSON reference or an inline document."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
@@ -333,12 +368,14 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     def create_bone_animation(
         input_blend_id: str,
         skeleton_id: str,
-        coordinates_asset_id: str,
+        coordinates_asset_id: str | None = None,
+        coordinates: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.create_animation(
             input_blend_id=input_blend_id,
             skeleton_id=skeleton_id,
             coordinates_asset_id=coordinates_asset_id,
+            coordinates=coordinates,
         )
 
     @server.tool(
@@ -346,7 +383,9 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
         title="Bind rigid model components",
         description=(
             "Use this when a segmented model must follow an animated Armature through rigid bone "
-            "parenting without skin weights or mesh deformation."
+            "parenting without skin weights or mesh deformation. Blend and skeleton inputs "
+            "accept asset_ or artifact_ IDs; the component mapping may be a JSON reference or "
+            "an inline document."
         ),
         annotations=LOCAL_WRITE,
         structured_output=True,
@@ -354,12 +393,14 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     def bind_rigid_components(
         input_blend_id: str,
         skeleton_id: str,
-        mapping_asset_id: str,
+        mapping_asset_id: str | None = None,
+        mapping: dict[str, Any] | None = None,
     ) -> JobSummary:
         return local.launcher.bind_components(
             input_blend_id=input_blend_id,
             skeleton_id=skeleton_id,
             mapping_asset_id=mapping_asset_id,
+            mapping=mapping,
         )
 
     @server.tool(
@@ -427,6 +468,44 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
             material_mode=material_mode,
             background=background,
         )
+
+    if is_local_edition:
+
+        @server.tool(
+            name="smooth_model_surface",
+            title="Smooth or polish model surface",
+            description=(
+                "Use this local-only tool after explicit smoothing authorization. source may be "
+                "an asset_/artifact_ ID or a Blend/GLB path inside the configured workspace. It "
+                "runs an immutable bounded Laplacian/Taubin-style vertex pass in Blender, keeps "
+                "topology and materials, enforces a displacement budget, and emits a new Blend, "
+                "GLB, and smoothing QA JSON. Use object_names or vertex_group to limit scope."
+            ),
+            annotations=LOCAL_WRITE,
+            structured_output=True,
+        )
+        def smooth_model_surface(
+            source: str,
+            object_names: list[str] | None = None,
+            vertex_group: str | None = None,
+            iterations: int = 3,
+            strength: float = 0.35,
+            preserve_volume: bool = True,
+            preserve_boundaries: bool = True,
+            max_displacement_ratio: float = 0.02,
+            shade_smooth: bool = True,
+        ) -> JobSummary:
+            return local.launcher.smooth_model_surface(
+                source=source,
+                object_names=object_names,
+                vertex_group=vertex_group,
+                iterations=iterations,
+                strength=strength,
+                preserve_volume=preserve_volume,
+                preserve_boundaries=preserve_boundaries,
+                max_displacement_ratio=max_displacement_ratio,
+                shade_smooth=shade_smooth,
+            )
 
     @server.tool(
         name="generate_pixel_cube",
@@ -613,6 +692,21 @@ def create_server(runtime: Runtime | None = None) -> MCPServer:
     def read_image_artifact(artifact_id: str) -> CallToolResult:
         return local.resolve_image_artifact(artifact_id)
 
+    if is_local_edition:
+
+        @server.tool(
+            name="get_local_artifact_path",
+            title="Get local artifact path",
+            description=(
+                "Use this local-edition-only read after a job completes when Codex or a local "
+                "desktop tool needs the exact on-disk path of one artifact."
+            ),
+            annotations=READ_ONLY,
+            structured_output=True,
+        )
+        def get_local_artifact_path(artifact_id: str) -> LocalArtifactLocation:
+            return local.resolve_local_artifact_path(artifact_id)
+
     return server
 
 
@@ -625,6 +719,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--host", default=None)
     parser.add_argument("--port", type=int, default=None)
+    parser.add_argument("--edition", choices=("chat", "local"), default="chat")
     return parser.parse_args()
 
 
@@ -632,12 +727,16 @@ def main() -> None:
     arguments = parse_arguments()
     if arguments.transport == "stdio":
         with contextlib.suppress(KeyboardInterrupt):
-            create_server(Runtime()).run("stdio")
+            create_server(Runtime(edition=arguments.edition)).run("stdio")
         return
     bootstrap = ConfigurationStore(LocalPaths()).load()
     host = arguments.host or bootstrap.mcp_host
     port = arguments.port or bootstrap.mcp_port
-    runtime = Runtime(endpoint_host=host, endpoint_port=port)
+    runtime = Runtime(
+        endpoint_host=host,
+        endpoint_port=port,
+        edition=arguments.edition,
+    )
     server = create_server(runtime)
     if host not in {"127.0.0.1", "localhost", "::1"}:
         raise SystemExit("ViewForge Local only binds to a loopback host.")

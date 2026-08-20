@@ -19,7 +19,7 @@ from .models import (
     JobSummary,
 )
 
-SERVER_VERSION = "0.3.0"
+SERVER_VERSION = "0.4.0"
 ALLOWED_EXTENSIONS: dict[str, AssetKind] = {
     ".glb": AssetKind.MODEL,
     ".gltf": AssetKind.MODEL,
