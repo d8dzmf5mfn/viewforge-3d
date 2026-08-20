@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "profileId": "replace-me",
+  "targetClass": "replace-me",
+  "route": "continuous-template-deformation",
+  "views": {
+    "required": ["front", "left45", "right45"],
+    "expectedYawDegrees": {},
+    "heldOutReview": ["side"]
+  },
+  "features": {
+    "provider": "profile-defined",
+    "mapping": "required-before-fit",
+    "criticalGroups": []
+  },
+  "template": {
+    "primarySurface": "single-continuous",
+    "stableTopology": true,
+    "stableUv": true,
+    "semanticRegionsRequired": true,
+    "licenseAndHashRequired": true,
+    "attachedComponents": []
+  },
+  "deformation": {
+    "stages": [
+      "camera",
+      "global-similarity",
+      "low-frequency-form",
+      "local-features",
+      "attached-components"
+    ],
+    "regularizers": [
+      "arap",
+      "cotangent-laplacian",
+      "inversion-barrier"
+    ],
+    "boundedCorrectionLoop": true
+  },
+  "appearance": {
+    "method": "visibility-weighted-multiview-projection",
+    "deLightRequired": true,
+    "fixedUvRequired": true,
+    "geometryMutationAllowed": false,
+    "unseenRegionPolicy": "explicit-template-inference"
+  },
+  "sdf": {
+    "role": "qa-only",
+    "surfaceGenerated": false
+  },
+  "delivery": {
+    "format": "glb",
+    "localViewer": true,
+    "preserveProvenance": true
+  }
+}

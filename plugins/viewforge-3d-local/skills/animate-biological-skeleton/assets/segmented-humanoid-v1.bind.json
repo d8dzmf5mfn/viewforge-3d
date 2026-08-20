@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "profileId": "segmented-humanoid-v1",
+  "mode": "rigid-segmented-bone-parent",
+  "segmented": true,
+  "requireCompleteSourceSet": true,
+  "skinWeights": false,
+  "armatureModifiers": false,
+  "expectedActionName": "VF_Wave_OneShot",
+  "animatedComponents": [
+    "arm-right-upper",
+    "arm-right-lower",
+    "hand-right"
+  ],
+  "components": {
+    "head": "head",
+    "neck": "neck",
+    "torso": "chest",
+    "pelvis": "root",
+    "arm-left-upper": "upper_arm.L",
+    "arm-left-lower": "forearm.L",
+    "hand-left": "hand.L",
+    "arm-right-upper": "upper_arm.R",
+    "arm-right-lower": "forearm.R",
+    "hand-right": "hand.R",
+    "leg-left-upper": "thigh.L",
+    "leg-left-lower": "shin.L",
+    "shoe-left": "foot.L",
+    "leg-right-upper": "thigh.R",
+    "leg-right-lower": "shin.R",
+    "shoe-right": "foot.R"
+  },
+  "qa": {
+    "transformTolerance": 0.00001,
+    "minimumAnimatedMotion": 0.1
+  }
+}

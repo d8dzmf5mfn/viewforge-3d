@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "profileId": "humanoid-wave-v1",
+  "kind": "three-bone-direction-animation",
+  "actionName": "VF_Wave_OneShot",
+  "fps": 24,
+  "chain": {
+    "bones": [
+      "upper_arm.R",
+      "forearm.R",
+      "hand.R"
+    ],
+    "imageSide": "viewer-left"
+  },
+  "coordinateSystem": {
+    "projection": "front-orthographic",
+    "frontCamera": "+Y looking toward -Y",
+    "imageRight": "-Blender X",
+    "imageUp": "+Blender Z",
+    "depth": "Y=0",
+    "origin": "moving shoulder",
+    "relativeScale": "rest upper-arm length = 1"
+  },
+  "markerDetection": {
+    "minimumAreaPixels": 45,
+    "minimumMarkerCount": 10,
+    "shoulderYRange": [
+      0.22,
+      0.39
+    ],
+    "shoulderCenterOffset": 0.045,
+    "chainOutwardOffset": 0.025
+  },
+  "requiredPoseImages": [
+    "raised",
+    "square",
+    "outward",
+    "end"
+  ],
+  "restReferencePose": "end",
+  "schedule": [
+    {
+      "frame": 1,
+      "pose": "rest",
+      "source": "existing Blender rest pose"
+    },
+    {
+      "frame": 14,
+      "pose": "raised",
+      "source": "Imagegen raised keyframe"
+    },
+    {
+      "frame": 18,
+      "pose": "square",
+      "source": "Imagegen square keyframe"
+    },
+    {
+      "frame": 26,
+      "pose": "outward",
+      "source": "Imagegen outward keyframe"
+    },
+    {
+      "frame": 34,
+      "pose": "square",
+      "source": "reused wave extreme"
+    },
+    {
+      "frame": 42,
+      "pose": "outward",
+      "source": "reused wave extreme"
+    },
+    {
+      "frame": 50,
+      "pose": "square",
+      "source": "reused wave extreme"
+    },
+    {
+      "frame": 64,
+      "pose": "rest",
+      "source": "Imagegen ending frame validated against rest"
+    }
+  ],
+  "interpolation": {
+    "type": "BEZIER",
+    "handleType": "AUTO_CLAMPED"
+  },
+  "qa": {
+    "maxDirectionErrorDegrees": 0.05,
+    "maxRestReferenceAngleDegrees": 5.0,
+    "maxInterframeAngularStepDegrees": 20.0,
+    "transformTolerance": 0.00001
+  }
+}

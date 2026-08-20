@@ -11,6 +11,7 @@ justified.
 
 [Latest release](https://github.com/d8dzmf5mfn/viewforge-3d/releases/latest) ·
 [Install and use](docs/GUIDE.md) · [Python environment](docs/VIRTUAL_ENVIRONMENT.md) ·
+[Separate Codex-local plugin](docs/LOCAL_PLUGIN.md) ·
 [ViewForge Local, Tunnel, and API key](local-app/USER_SETUP.zh-CN.md)
 
 ![iPhone 17 official 2D evidence compared with a ViewForge geometry preview](docs/assets/iphone17-evidence-vs-geometry-preview.png)
@@ -75,6 +76,10 @@ For all specialist skills, packaging instructions, and output states, follow
 Mode or another device, follow the
 [ViewForge Local installation, Tunnel, and API key guide](local-app/USER_SETUP.zh-CN.md).
 
+For Codex on this Mac, use the separate `viewforge-3d-local` plugin instead. It binds directly to
+the repository `.venv` over stdio, records the repository path in its own local runtime locator,
+and requires no Tunnel or API key. See [the local plugin guide](docs/LOCAL_PLUGIN.md).
+
 ## How it works
 
 1. **Lock the evidence** — inventory the supplied views, hashes, subject profile, and authority of
@@ -91,6 +96,7 @@ Mode or another device, follow the
 ## Repository layout
 
 - `plugins/viewforge-3d-toolkit/` — distributable Codex plugin source.
+- `plugins/viewforge-3d-local/` — separate venv-backed Codex-local plugin with smoothing tools.
 - `.agents/plugins/marketplace.json` — repo-local Codex marketplace manifest.
 - `LICENSE` — Apache License 2.0 terms for the repository code and plugin distribution.
 - `src/face3d/` — Python geometry and validation implementation.
@@ -100,6 +106,7 @@ Mode or another device, follow the
 - `local-app/` — private macOS MCP host and its build/connect guide.
 - `docs/GUIDE.md` — detailed installation and skill invocation guide.
 - `docs/VIRTUAL_ENVIRONMENT.md` — isolated Python environment setup.
+- `docs/LOCAL_PLUGIN.md` — side-by-side local plugin, path locator, and no-Tunnel setup.
 - `README.zh-CN.md`, `docs/GUIDE.zh-CN.md`, and `docs/VIRTUAL_ENVIRONMENT.zh-CN.md` — independent
   Simplified Chinese documentation.
 

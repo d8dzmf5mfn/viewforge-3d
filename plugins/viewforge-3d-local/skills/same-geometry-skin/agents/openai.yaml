@@ -1,0 +1,4 @@
+interface:
+  display_name: "Same-Geometry Skin"
+  short_description: "Project texture while locking geometry and UVs"
+  default_prompt: "Use $same-geometry-skin to apply appearance without changing accepted geometry."

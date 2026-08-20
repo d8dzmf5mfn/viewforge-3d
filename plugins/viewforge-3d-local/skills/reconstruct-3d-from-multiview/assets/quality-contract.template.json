@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "input": {
+    "minimumShortSide": 1024,
+    "requireDistinctViewHashes": true,
+    "requireViewConsistencyReview": true,
+    "requireMaskReview": true
+  },
+  "fit": {
+    "allRequiredViewsMustPass": true,
+    "minimumSilhouetteIou": 0.9,
+    "featureNmeRequired": false,
+    "maximumFeatureNme": 0.03,
+    "maximumInvertedFaces": 0,
+    "maximumSelfIntersectionPairs": 0
+  },
+  "topology": {
+    "requiredConnectedComponents": 1,
+    "maximumBoundaryEdges": 0,
+    "maximumNonManifoldEdges": 0,
+    "maximumDegenerateFaces": 0,
+    "maximumInvertedFaces": 0,
+    "maximumSelfIntersectionPairs": 0
+  },
+  "skin": {
+    "requireGeometryHashIdentity": true,
+    "requireUvHashIdentity": true,
+    "maximumUvDelta": 0.0,
+    "minimumObservedFraction": 0.3,
+    "maximumSeamDeltaE00Median": 3.0,
+    "maximumSeamDeltaE00P95": 8.0
+  },
+  "sdf": {
+    "requiredRole": "qa-only",
+    "surfaceGenerated": false
+  },
+  "delivery": {
+    "requiredReviewViews": ["front", "left45", "right45", "side"],
+    "requiredSurfaceSource": "deformed-template",
+    "requireUserSignoff": true,
+    "requireLocalOnly": true
+  },
+  "resources": {
+    "downloadApprovalBytes": 1073741824
+  }
+}

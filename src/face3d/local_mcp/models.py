@@ -25,6 +25,7 @@ class JobKind(StrEnum):
     BIND_RIGID_COMPONENTS = "bind_rigid_components"
     BUILD_DECLARATIVE_MODEL = "build_declarative_model"
     RENDER_MODEL_PREVIEW = "render_model_preview"
+    SMOOTH_MODEL_SURFACE = "smooth_model_surface"
     GENERATE_PIXEL_CUBE = "generate_pixel_cube"
     RECONSTRUCT_SIX_VIEW_VISUAL_HULL = "reconstruct_six_view_visual_hull"
     VALIDATE_FACE_MULTIVIEW = "validate_face_multiview"
@@ -72,6 +73,7 @@ class JobSummary(PublicModel):
 
 class LocalStatus(PublicModel):
     ready: bool
+    edition: Literal["chat", "local"]
     server_version: str
     workspace_configured: bool
     blender_available: bool
@@ -100,6 +102,11 @@ class ArtifactList(PublicModel):
 class JSONArtifact(PublicModel):
     artifact: ArtifactSummary
     document: dict[str, Any]
+
+
+class LocalArtifactLocation(PublicModel):
+    artifact: ArtifactSummary
+    path: str
 
 
 class ModelingAssetState(PublicModel):
@@ -188,3 +195,4 @@ RenderView = Literal[
 ]
 RenderMaterialMode = Literal["original", "neutral"]
 RenderBackground = Literal["studio_dark", "studio_light", "transparent"]
+ViewForgeEdition = Literal["chat", "local"]

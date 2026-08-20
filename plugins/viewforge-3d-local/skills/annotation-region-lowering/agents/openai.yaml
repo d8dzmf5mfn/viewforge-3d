@@ -1,0 +1,4 @@
+interface:
+  display_name: "Annotation Region Lowering"
+  short_description: "Apply bounded inward edits to annotated regions"
+  default_prompt: "Use $annotation-region-lowering to lower only the annotated mesh region."

@@ -185,6 +185,48 @@ def test_mcp_tool_contract_has_focused_annotated_tools(tmp_path: Path) -> None:
     assert render_schema["properties"]["resolution"]["default"] == 768
 
 
+def test_local_edition_adds_only_local_workbench_tools(tmp_path: Path) -> None:
+    chat_runtime, _ = configured_runtime(tmp_path)
+    local_runtime = Runtime(chat_runtime.paths, edition="local")
+
+    chat_tools = anyio.run(create_server(chat_runtime).list_tools)
+    local_tools = anyio.run(create_server(local_runtime).list_tools)
+    chat_names = {tool.name for tool in chat_tools}
+    local_names = {tool.name for tool in local_tools}
+
+    assert local_names == chat_names | {
+        "smooth_model_surface",
+        "get_local_artifact_path",
+    }
+    assert "smooth_model_surface" not in chat_names
+    assert "get_local_artifact_path" not in chat_names
+    local_by_name = {tool.name: tool for tool in local_tools}
+    smooth_schema = local_by_name["smooth_model_surface"].input_schema
+    assert smooth_schema["required"] == ["source"]
+    assert smooth_schema["properties"]["preserve_volume"]["default"] is True
+    assert local_by_name["get_local_artifact_path"].annotations.read_only_hint is True
+    status = local_runtime.status()
+    assert status.edition == "local"
+    assert "topology_preserving_smoothing" in status.capabilities
+
+
+def test_local_artifact_path_is_not_available_to_chat_edition(tmp_path: Path) -> None:
+    chat_runtime, _ = configured_runtime(tmp_path)
+    job_id = "job_local_path_fixture"
+    output = chat_runtime.paths.jobs / job_id / "output"
+    output.mkdir(parents=True)
+    model = output / "smoothed-model.glb"
+    model.write_bytes(b"glTF local path fixture")
+    artifact = ArtifactStore(chat_runtime.paths).register(job_id, model)
+    local_runtime = Runtime(chat_runtime.paths, edition="local")
+
+    location = local_runtime.resolve_local_artifact_path(artifact.id)
+
+    assert location.path == str(model.resolve())
+    with pytest.raises(RuntimeError, match="local edition"):
+        chat_runtime.resolve_local_artifact_path(artifact.id)
+
+
 def test_blender_commands_disable_embedded_autoexec(tmp_path: Path) -> None:
     plugin_root = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-toolkit"
     request = JobRequest(
@@ -275,6 +317,30 @@ def test_render_blender_command_uses_plugin_owned_script_and_safe_loading(
 
     assert "--factory-startup" not in blend_command
     assert blend_command.index(blend_arguments["input"]) < blend_command.index("--python")
+
+
+def test_surface_smooth_blender_command_uses_local_plugin_script(tmp_path: Path) -> None:
+    plugin_root = Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"
+    request = JobRequest(
+        schema_version=2,
+        job_id="job_smooth_glb",
+        kind=JobKind.SMOOTH_MODEL_SURFACE.value,
+        blender_executable=sys.executable,
+        plugin_root=str(plugin_root),
+        arguments={
+            "input": str(tmp_path / "source.glb"),
+            "options": str(tmp_path / "smoothing-options.json"),
+        },
+    )
+
+    command = blender_command(request, tmp_path / "smooth-output")
+
+    assert "--factory-startup" in command
+    assert "--disable-autoexec" in command
+    assert command[command.index("--python-exit-code") + 1] == "1"
+    script = Path(command[command.index("--python") + 1]).resolve()
+    assert script.is_relative_to(plugin_root.resolve())
+    assert script.name == "smooth_model_surface.py"
 
 
 def test_skeleton_blend_command_loads_source_before_worker_script(tmp_path: Path) -> None:
@@ -461,6 +527,58 @@ def test_render_preview_stages_source_and_validates_options(
             material_mode="original",
             background="studio_dark",
         )
+
+
+def test_surface_smooth_accepts_workspace_path_and_stages_options(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, workspace = configured_runtime(tmp_path)
+    source = workspace / "rough-model.glb"
+    source.write_bytes(b"glTF smoothing fixture")
+    configuration = runtime.configuration.load()
+    runtime.configuration.save(
+        LocalConfiguration(
+            workspace_root=configuration.workspace_root,
+            blender_executable=configuration.blender_executable,
+            plugin_root=str(
+                Path(__file__).resolve().parents[1] / "plugins" / "viewforge-3d-local"
+            ),
+        )
+    )
+    monkeypatch.setattr(runtime.configuration, "blender", lambda: Path(sys.executable))
+
+    class FakeWorker:
+        pid = 4325
+
+    monkeypatch.setattr(
+        "face3d.local_mcp.jobs.subprocess.Popen",
+        lambda *args, **kwargs: FakeWorker(),
+    )
+
+    summary = runtime.launcher.smooth_model_surface(
+        source=str(source),
+        object_names=["Head"],
+        vertex_group="PolishMask",
+        iterations=4,
+        strength=0.25,
+        preserve_volume=True,
+        preserve_boundaries=True,
+        max_displacement_ratio=0.01,
+        shade_smooth=True,
+    )
+
+    request = load_request(Path(runtime.jobs.load(summary.id).request_path))
+    staged_source = Path(request.arguments["input"])
+    staged_options = Path(request.arguments["options"])
+    options = json.loads(staged_options.read_text(encoding="utf-8"))
+    assert staged_source.is_relative_to(runtime.jobs.directory(summary.id) / "inputs")
+    assert staged_source.read_bytes() == source.read_bytes()
+    assert options["objectNames"] == ["Head"]
+    assert options["vertexGroup"] == "PolishMask"
+    assert options["iterations"] == 4
+    assert options["preserveVolume"] is True
+    assert options["maxDisplacementRatio"] == 0.01
 
 
 def test_render_contact_sheet_and_image_artifact_roundtrip(tmp_path: Path) -> None:

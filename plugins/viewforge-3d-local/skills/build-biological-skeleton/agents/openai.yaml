@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Biological Skeleton"
+  short_description: "Build auditable armatures for people and animals"
+  default_prompt: "Use $viewforge-3d-local:build-biological-skeleton to derive and validate a bone-only armature from this biological 3D model."

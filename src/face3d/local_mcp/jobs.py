@@ -35,6 +35,7 @@ BLENDER_JOB_KINDS = {
     JobKind.BIND_RIGID_COMPONENTS,
     JobKind.BUILD_DECLARATIVE_MODEL,
     JobKind.RENDER_MODEL_PREVIEW,
+    JobKind.SMOOTH_MODEL_SURFACE,
 }
 RENDER_VIEWS = {
     "perspective",
@@ -407,6 +408,71 @@ class JobLauncher:
             staged_inputs={"input": (source, f"source{source.suffix.lower()}")},
         )
 
+    def smooth_model_surface(
+        self,
+        *,
+        source: str,
+        object_names: list[str] | None,
+        vertex_group: str | None,
+        iterations: int,
+        strength: float,
+        preserve_volume: bool,
+        preserve_boundaries: bool,
+        max_displacement_ratio: float,
+        shade_smooth: bool,
+    ) -> JobSummary:
+        if source.startswith(("asset_", "artifact_")):
+            source_path = self.references.resolve(source, {".blend", ".glb"})
+        else:
+            registered = self.assets.register(source)
+            source_path = self.assets.resolve(registered.id)
+            if source_path.suffix.lower() not in {".blend", ".glb"}:
+                raise ValueError("The smoothing source must be a Blend or GLB model.")
+        if isinstance(iterations, bool) or not 1 <= iterations <= 20:
+            raise ValueError("iterations must be between 1 and 20.")
+        if isinstance(strength, bool) or not 0.01 <= strength <= 1.0:
+            raise ValueError("strength must be between 0.01 and 1.0.")
+        if (
+            isinstance(max_displacement_ratio, bool)
+            or not 0.0001 <= max_displacement_ratio <= 0.25
+        ):
+            raise ValueError("max_displacement_ratio must be between 0.0001 and 0.25.")
+        cleaned_names: list[str] | None = None
+        if object_names is not None:
+            if not 1 <= len(object_names) <= 64:
+                raise ValueError("object_names must contain between 1 and 64 names.")
+            cleaned_names = []
+            for raw_name in object_names:
+                name = raw_name.strip()
+                if not name or len(name) > 128:
+                    raise ValueError("Each object name must contain 1 to 128 characters.")
+                cleaned_names.append(name)
+            if len(set(cleaned_names)) != len(cleaned_names):
+                raise ValueError("object_names must not contain duplicates.")
+        cleaned_group = vertex_group.strip() if vertex_group is not None else None
+        if cleaned_group is not None and (not cleaned_group or len(cleaned_group) > 128):
+            raise ValueError("vertex_group must contain 1 to 128 characters.")
+        options = {
+            "schemaVersion": 1,
+            "objectNames": cleaned_names,
+            "vertexGroup": cleaned_group,
+            "iterations": int(iterations),
+            "strength": float(strength),
+            "preserveVolume": bool(preserve_volume),
+            "preserveBoundaries": bool(preserve_boundaries),
+            "maxDisplacementRatio": float(max_displacement_ratio),
+            "shadeSmooth": bool(shade_smooth),
+        }
+        return self._create(
+            JobKind.SMOOTH_MODEL_SURFACE,
+            {},
+            runtime="blender",
+            staged_inputs={
+                "input": (source_path, f"source{source_path.suffix.lower()}")
+            },
+            inline_json_inputs={"options": (options, "smoothing-options.json")},
+        )
+
     def generate_pixel_cube(self, side_cm: float, cells_per_edge: int) -> JobSummary:
         if not 0.1 <= side_cm <= 100_000:
             raise ValueError("side_cm must be between 0.1 and 100000.")
@@ -748,6 +814,37 @@ def blender_command(request: JobRequest, output_dir: Path) -> list[str]:
                 request.arguments["material_mode"],
                 "--background",
                 request.arguments["background"],
+            ]
+        )
+        return command
+    if request.kind == JobKind.SMOOTH_MODEL_SURFACE.value:
+        script = _script(plugin_root, "runtime/blender/smooth_model_surface.py")
+        command = [
+            str(blender),
+            "--background",
+            "--disable-autoexec",
+        ]
+        if Path(request.arguments["input"]).suffix.lower() == ".blend":
+            command.append(request.arguments["input"])
+        else:
+            command.append("--factory-startup")
+        command.extend(
+            [
+                "--python-exit-code",
+                "1",
+                "--python",
+                str(script),
+                "--",
+                "--input",
+                request.arguments["input"],
+                "--options",
+                request.arguments["options"],
+                "--output-blend",
+                str(output_dir / "smoothed-model.blend"),
+                "--output-glb",
+                str(output_dir / "smoothed-model.glb"),
+                "--qa",
+                str(output_dir / "smoothing-qa.json"),
             ]
         )
         return command

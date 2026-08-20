@@ -1,0 +1,44 @@
+{
+  "name": "viewforge-3d-local",
+  "version": "0.1.0+codex.20260820041326",
+  "description": "A separate, local-venv ViewForge 3D workbench for Codex with immutable modeling, rendering, rigging, and topology-preserving surface smoothing tools.",
+  "author": {
+    "name": "ViewForge 3D Contributors"
+  },
+  "homepage": "https://github.com/d8dzmf5mfn/viewforge-3d",
+  "repository": "https://github.com/d8dzmf5mfn/viewforge-3d",
+  "license": "Apache-2.0",
+  "keywords": [
+    "3d",
+    "local",
+    "blender",
+    "smoothing",
+    "modeling",
+    "rendering"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ViewForge 3D Local",
+    "shortDescription": "Run ViewForge from a private local venv, including surface smoothing.",
+    "longDescription": "A side-by-side local edition of ViewForge 3D for Codex. It uses a repository-owned Python 3.11 virtual environment and separate local state, keeps the ChatGPT/Tunnel edition unchanged, exposes immutable modeling and rendering workflows, and adds bounded topology-preserving Blender surface smoothing plus direct local artifact paths.",
+    "developerName": "ViewForge 3D Contributors",
+    "category": "Creative",
+    "capabilities": [
+      "Route",
+      "Model",
+      "Render",
+      "Smooth",
+      "Reconstruct",
+      "Skeleton",
+      "Animate",
+      "Validate",
+      "Local Files"
+    ],
+    "defaultPrompt": [
+      "Use $viewforge-3d-local:viewforge-3d-router to choose a private local 3D workflow.",
+      "Smooth an approved Blend or GLB with smooth_model_surface, then inspect its QA and render.",
+      "Use get_local_artifact_path after a job so local desktop tools can open its output."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}
