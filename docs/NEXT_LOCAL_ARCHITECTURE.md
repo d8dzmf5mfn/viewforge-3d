@@ -44,7 +44,9 @@ to final geometry:
 1. Validate the six roles, image integrity, subject identity, scale assumptions, masks, and camera
    metadata. Reject mixed subjects and unresolved contradictory evidence.
 2. Select an explicit category template with fixed topology, landmarks, symmetry regions, and
-   protected features. A human face, body, and generic object require different templates.
+   protected features. A person uses one whole-body template spanning the head and face, torso,
+   and limbs so identity, proportions, and connections are checked in one scan rather than a
+   separate face pipeline. Generic objects use their own category templates.
 3. Fit camera and shape parameters against observed silhouettes and landmarks. Weight generated
    or inferred evidence below observed views and retain the weights in provenance.
 4. Apply bounded topology-preserving refinement. Record displacement, protected vertices,
@@ -58,8 +60,10 @@ to final geometry:
 
 - Milestone 1 — complete: typed Asset IR, capability registry, fail-closed routing, deterministic
   primitive compiler, provenance report, and mandatory postconditions.
-- Milestone 2 — next: category-specific parametric template registry and a first face-template
-  fitter driven by six observed views and landmarks.
+- Milestone 2 — next: category-specific parametric template registry and a first whole-body
+  consistency scanner driven by six observed views, full-body landmarks, and cross-view identity
+  and proportion constraints. The head and face, torso, and limbs are fitted and accepted in one
+  workflow.
 - Milestone 3 — later: optional learned completion adapter with local model/version hashes and
   generated-evidence labeling.
 - Milestone 4 — later: repair loop that converts failed metrics into bounded IR parameter updates
